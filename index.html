@@ -1,86 +1,86 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ja">
 <head>
-  <base target="_top">
-  <title>学習記録ストップウォッチ</title>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link rel="stylesheet" href="style.css">
-  <script src="jquery-v1.12.4.min.js">
-  </script>
-  <script src="script.js">
-  </script>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Festival Map — シフト可視化</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css" />
 </head>
-<body>
-  <div id="clock">
-    00:00'00
-    </div>
-  <div id="main">
-    <select id="subject" name="subject"><!--要変更-->
-      <option value="現文">現代文</option>
-      <option value="古典">古典</option>
-      <option value="数I">数①(Ⅰ,Ⅱ,Ⅲ)</option>
-      <option value="数A">数②(Ａ,Ｂ,探究)</option>
-      <option value="物理">物理</option>
-      <option value="化学">化学</option>
-      <option value="生物">生物</option>
-      <option value="地学">地学</option>
-      <option value="世史">世界史</option>
-      <option value="日地">日本史・地理</option>
-      <option value="政経">政経</option>
-      <option value="現社">現社</option>
-      <option value="倫理">倫理</option>
-      <option value="コ英">コ英</option>
-      <option value="英表">英表</option>
-      <option value="情報">情報</option>
-      <option value="家庭">家庭</option>
-      <option value="保健">保健</option>
-    </select>
+<body class="bg-light">
+  <header class="bg-primary text-white py-3 px-3">
+    <h1 class="h4 fw-bold mb-0">Festival Map — シフト可視化</h1>
+  </header>
 
-    <br>
-    <input type="button" id="start" value="開始">
-    <input type="button" id="stop" value="停止" disabled>
-  </div>
-  <div id="manual">
-      <p>▼手動入力</p>
-      <input type="number" id="shudo" value="0">
-      <input type="button" id="add" value="決定">
-      
+  <div class="container-fluid py-3">
+    <section class="card shadow-sm border-0 mb-3 w-100">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-1">入力</h2>
+          </div>
+        </div>
+
+        <div class="row g-3">
+          <div class="col-12">
+            <div class="border rounded-3 bg-white p-3">
+              <div class="row g-3 align-items-end">
+                <div class="col-12 col-lg-6">
+                  <label class="form-label fw-semibold" for="shiftsFile">シフトCSV</label>
+                  <input id="shiftsFile" class="form-control" type="file" accept=".csv" />
+                </div>
+                <div class="col-12 col-lg-6">
+                  <label class="form-label fw-semibold d-block">保存</label>
+                  <div class="d-grid gap-2 d-sm-flex">
+                    <button id="saveShifts" class="btn btn-primary flex-fill">このデバイス・ブラウザに保存</button>
+                    <button id="clearShifts" class="btn btn-outline-danger flex-fill">保存をクリア</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-12">
+            <div class="border rounded-3 bg-white p-3">
+              <h3 class="h6 fw-bold mb-2">CSVの形式</h3>
+              <div class="small text-muted mb-2">場所の識別に <span>stall_name</span>（企画名）を使用するため、企画名は登録通りに正確に入力してください。</div>
+              <div id="sampleShiftPreview" class="sample-preview"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="card shadow-sm border-0">
+      <div class="card-body">
+        <div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-2 mb-3">
+          <div>
+            <h2 class="h5 fw-bold mb-1">出力</h2>
+          </div>
+        </div>
+
+        <div class="row g-3 align-items-stretch">
+          <div class="col-12 col-lg-8">
+            <div id="map" class="map-frame"></div>
+          </div>
+          <div class="col-12 col-lg-4">
+            <aside id="sidebar" class="sidebar-frame h-100 p-3">
+              <h5 class="fw-bold">現在シフト中</h5>
+              <ul id="activeList" class="list-group list-group-flush"></ul>
+            </aside>
+          </div>
+        </div>
+      </div>
+    </section>
   </div>
 
-  <div id="csv">
-      <table border="1" id="csv-table" >
-          <tr>
-              <th>日付</th>
-              <th>現文</th>
-              <th>古典</th>
-              <th>数①</th>
-              <th>数②</th>
-              <th>物理</th>
-              <th>化学</th>
-              <th>生物</th>
-              <th>地学</th>
-              <th>世史</th>
-              <th>日地</th>
-              <th>政経</th>
-              <th>現社</th>
-              <th>倫理</th>
-              <th>コ英</th>
-              <th>英表</th>
-              <th>情報</th>
-              <th>家庭</th>
-              <th>保健</th>
-              <th>合計</th>
-          </tr>
-          <tbody id="list"></tbody>
-      </table>
-  <div id="buttons">
-    <input type="button" id="reload" value="表を再読込">    <a id="download_button">表をダウンロード</a> <input type="button" id="clear" value="全内容をクリア">
-  </div>
+  <footer class="px-3 pb-3 pt-2 text-muted small">
+    <small>CSVフォーマットはREADMEを参照してください。</small>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
+  <script src="app.js"></script>
 </body>
-<footer>
-  <div>
-    <a href="https://drive.google.com/file/d/1-a7z3X-6UPIBWbQnEWQ7VXfoWQm6lakA/view?usp=sharing">ヘルプ</a>
-  </div>
-</footer>
 </html>
