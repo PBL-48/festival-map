@@ -90,7 +90,9 @@ function init() {
   document.getElementById('shiftsFile').addEventListener('change', onShiftsFile);
   document.getElementById('saveShifts').addEventListener('click', saveShifts);
   document.getElementById('clearShifts').addEventListener('click', clearSavedShifts);
-
+        placeStalls.forEach(stall=>{
+          stallBlocks.push({ ...stall, shifts: [] });
+        });
   loadSavedShifts();
   loadEmbeddedPlaces();
   loadEmbeddedStalls();
