@@ -90,9 +90,6 @@ function init() {
   document.getElementById('shiftsFile').addEventListener('change', onShiftsFile);
   document.getElementById('saveShifts').addEventListener('click', saveShifts);
   document.getElementById('clearShifts').addEventListener('click', clearSavedShifts);
-        placeStalls.forEach(stall=>{
-          stallBlocks.push({ ...stall, shifts: [] });
-        });
   loadSavedShifts();
   loadEmbeddedPlaces();
   loadEmbeddedStalls();
@@ -280,8 +277,15 @@ function renderPlaces(){
     if (obj.highlight) map.removeLayer(obj.highlight);
   });
   placeMarkers.clear();
+  const referencedPlaceNames = new Set();
+  shifts.forEach(shift=>{
+    const stall = stallsByName.get(shift.stall_name);
+    if (stall && stall.place) referencedPlaceNames.add(stall.place);
+  });
 
-  places.forEach(place=>{
+  const showAll = referencedPlaceNames.size === 0;
+  places.forEach(place => {
+    if (!showAll && !Array.from(referencedPlaceNames).some(name => placeNamesMatch(place.name, name))) return;
     const marker = L.circleMarker([place.lat, place.lng], MARKER_STYLE_DEFAULT).addTo(map);
     marker.bindPopup(`<strong>${escapeHtml(place.name)}</strong>`, { className: 'festival-popup' });
     marker.on('mouseover', ()=> {
