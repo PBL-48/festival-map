@@ -90,6 +90,7 @@ function init() {
   document.getElementById('shiftsFile').addEventListener('change', onShiftsFile);
   document.getElementById('saveShifts').addEventListener('click', saveShifts);
   document.getElementById('clearShifts').addEventListener('click', clearSavedShifts);
+
   loadSavedShifts();
   loadEmbeddedPlaces();
   loadEmbeddedStalls();
@@ -278,7 +279,17 @@ function renderPlaces(){
   });
   placeMarkers.clear();
 
+  const referencedPlaceNames = new Set();
+  shifts.forEach(shift=>{
+    const stall = stallsByName.get(shift.stall_name);
+    if (stall && stall.place) referencedPlaceNames.add(stall.place);
+  });
+
+  const showAll = referencedPlaceNames.size === 0;
+
   places.forEach(place=>{
+    if (!showAll && !Array.from(referencedPlaceNames).some(name => placeNamesMatch(place.name, name))) return;
+
     const marker = L.circleMarker([place.lat, place.lng], MARKER_STYLE_DEFAULT).addTo(map);
     marker.bindPopup(`<strong>${escapeHtml(place.name)}</strong>`, { className: 'festival-popup' });
     marker.on('mouseover', ()=> {
@@ -313,6 +324,11 @@ function showPopupForPlace(place){
         stallBlocks.push({ ...stall, shifts: stallShifts });
       }
     });
+
+    // すべての企画がシフト情報を持たない場合
+    if (stallBlocks.length === 0) {
+      stallBlocks.push({ name: '予約者がいません', owner: '未設定', content: '未設定', shifts: [] });
+    }
   }
 
   const html = stallBlocks.map(stall=>{
