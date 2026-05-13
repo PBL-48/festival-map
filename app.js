@@ -319,16 +319,8 @@ function showPopupForPlace(place){
   } else {
     placeStalls.forEach(stall=>{
       const stallShifts = shifts.filter(shift=>shift.stall_name === stall.name);
-      // シフト情報がある企画のみ表示
-      if (stallShifts.length > 0) {
-        stallBlocks.push({ ...stall, shifts: stallShifts });
-      }
+      stallBlocks.push({ ...stall, shifts: stallShifts });
     });
-
-    // すべての企画がシフト情報を持たない場合
-    if (stallBlocks.length === 0) {
-      stallBlocks.push({ name: '予約者がいません', owner: '未設定', content: '未設定', shifts: [] });
-    }
   }
 
   const html = stallBlocks.map(stall=>{
