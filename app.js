@@ -6,8 +6,8 @@
     time format: HH:MM (24h)
 */
 
-const MAP_CENTER = [35.681236, 139.767125];
-const MAP_ZOOM = 16;
+const MAP_CENTER = [35.7113, 139.7614];
+const MAP_ZOOM = 15;
 
 const MARKER_STYLE_DEFAULT = {
   radius: 8,
