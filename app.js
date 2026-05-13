@@ -324,7 +324,7 @@ function showPopupForPlace(place){
         stallBlocks.push({ ...stall, shifts: stallShifts });
       }
     });
-    
+
     // すべての企画がシフト情報を持たない場合
     if (stallBlocks.length === 0) {
       stallBlocks.push({ name: '予約者がいません', owner: '未設定', content: '未設定', shifts: [] });
