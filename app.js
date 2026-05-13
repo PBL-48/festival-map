@@ -45,6 +45,25 @@ let blinkOn = true;
 
 const LS_KEY = 'festival_shifts_json_v1';
 
+function normalizePlaceName(value){
+  return String(value ?? '')
+    .trim()
+    .split('・')
+    .map(part => {
+      const cleaned = part.trim().replace(/\u3000/g, '');
+      const letterNumber = cleaned.match(/^(.*?)([A-Za-z]+)(\d+)$/);
+      if (letterNumber) {
+        return `${letterNumber[1]}${letterNumber[3]}${letterNumber[2]}`;
+      }
+      return cleaned;
+    })
+    .join('・');
+}
+
+function placeNamesMatch(left, right){
+  return normalizePlaceName(left) === normalizePlaceName(right);
+}
+
 function init() {
   map = L.map('map').setView(MAP_CENTER, MAP_ZOOM);
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -142,10 +161,11 @@ function setStalls(stallRows){
   stallRows.forEach(stall => {
     if (!stall.name) return;
     stallsByName.set(stall.name, stall);
-    if (!stallsByPlace.has(stall.place)) {
-      stallsByPlace.set(stall.place, []);
+    const placeKey = normalizePlaceName(stall.place);
+    if (!stallsByPlace.has(placeKey)) {
+      stallsByPlace.set(placeKey, []);
     }
-    stallsByPlace.get(stall.place).push(stall);
+    stallsByPlace.get(placeKey).push(stall);
   });
 }
 
@@ -252,7 +272,7 @@ function renderPlaces(){
   const showAll = referencedPlaceNames.size === 0;
 
   places.forEach(place=>{
-    if (!showAll && !referencedPlaceNames.has(place.name)) return;
+    if (!showAll && !Array.from(referencedPlaceNames).some(name => placeNamesMatch(place.name, name))) return;
 
     const marker = L.circleMarker([place.lat, place.lng], MARKER_STYLE_DEFAULT).addTo(map);
     marker.bindPopup(`<strong>${escapeHtml(place.name)}</strong>`, { className: 'festival-popup' });
@@ -265,7 +285,7 @@ function renderPlaces(){
 }
 
 function showPopupForPlace(place){
-  const placeStalls = stallsByPlace.get(place.name) || [];
+  const placeStalls = stallsByPlace.get(normalizePlaceName(place.name)) || [];
   const stallBlocks = [];
 
   if (placeStalls.length === 0) {
@@ -320,7 +340,7 @@ function updateMarkersWithShifts(){
     const stall = stallsByName.get(shift.stall_name);
     if (!stall) return;
     places.forEach(place=>{
-      if (place.name === stall.place) {
+      if (placeNamesMatch(place.name, stall.place)) {
         activePlaceIds.add(place.id);
       }
     });
@@ -360,7 +380,7 @@ function renderActiveList(active){
     `;
     li.addEventListener('click', ()=>{
       if (!stall) return;
-      const firstMatch = places.find(place => place.name === stall.place);
+      const firstMatch = places.find(place => placeNamesMatch(place.name, stall.place));
       if (!firstMatch) return;
       const pl = placeMarkers.get(firstMatch.id);
       if (pl) {
