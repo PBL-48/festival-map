@@ -60,16 +60,12 @@
           </div>
         </div>
 
-        <div class="row g-3 align-items-stretch">
-          <div class="col-12 col-lg-8">
-            <div id="map" class="map-frame"></div>
-          </div>
-          <div class="col-12 col-lg-4">
-            <aside id="sidebar" class="sidebar-frame h-100 p-3">
-              <h5 class="fw-bold">現在シフト中</h5>
-              <ul id="activeList" class="list-group list-group-flush"></ul>
-            </aside>
-          </div>
+        <div class="map-shell">
+          <div id="map" class="map-frame"></div>
+          <aside id="sidebar" class="sidebar-frame map-overlay p-3">
+            <h5 class="fw-bold">現在シフト中</h5>
+            <ul id="activeList" class="list-group list-group-flush"></ul>
+          </aside>
         </div>
       </div>
     </section>

@@ -42,6 +42,7 @@ let shifts = [];
 let stagedShifts = null;
 let activePlaceIds = new Set();
 let blinkOn = true;
+let popupCloseTimer = null;
 
 const LS_KEY = 'festival_shifts_json_v1';
 
@@ -62,6 +63,21 @@ function normalizePlaceName(value){
 
 function placeNamesMatch(left, right){
   return normalizePlaceName(left) === normalizePlaceName(right);
+}
+
+function cancelPopupCloseTimer(){
+  if (popupCloseTimer) {
+    clearTimeout(popupCloseTimer);
+    popupCloseTimer = null;
+  }
+}
+
+function schedulePopupClose(marker){
+  cancelPopupCloseTimer();
+  popupCloseTimer = setTimeout(()=>{
+    marker.closePopup();
+    popupCloseTimer = null;
+  }, 140);
 }
 
 function init() {
@@ -276,8 +292,17 @@ function renderPlaces(){
 
     const marker = L.circleMarker([place.lat, place.lng], MARKER_STYLE_DEFAULT).addTo(map);
     marker.bindPopup(`<strong>${escapeHtml(place.name)}</strong>`, { className: 'festival-popup' });
-    marker.on('mouseover', ()=> showPopupForPlace(place));
-    marker.on('mouseout', ()=> marker.closePopup());
+    marker.on('mouseover', ()=> {
+      cancelPopupCloseTimer();
+      showPopupForPlace(place);
+    });
+    marker.on('mouseout', ()=> schedulePopupClose(marker));
+    marker.on('popupopen', event=>{
+      const popupEl = event.popup.getElement();
+      if (!popupEl) return;
+      popupEl.addEventListener('mouseenter', cancelPopupCloseTimer);
+      popupEl.addEventListener('mouseleave', ()=> schedulePopupClose(marker));
+    });
     placeMarkers.set(place.id, { place, marker, highlight: null });
   });
 
@@ -285,6 +310,7 @@ function renderPlaces(){
 }
 
 function showPopupForPlace(place){
+  cancelPopupCloseTimer();
   const placeStalls = stallsByPlace.get(normalizePlaceName(place.name)) || [];
   const stallBlocks = [];
 

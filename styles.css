@@ -1,9 +1,19 @@
-.map-frame {
-	min-height: min(70vh, 760px);
-	height: 100%;
+.map-shell {
+	position: relative;
+	width: 100%;
+	height: min(100vh, 960px);
+	min-height: 72vh;
 	border-radius: 14px;
 	overflow: hidden;
 	border: 1px solid #d9e0e6;
+	background: #e9eef5;
+}
+
+.map-frame {
+	position: absolute;
+	inset: 0;
+	height: 100%;
+	min-height: 100%;
 }
 .sidebar-frame {
 	min-width: 0;
@@ -37,6 +47,8 @@
 	color: #3a2d0f;
 	font-size: 13px;
 	line-height: 1.5;
+	max-height: min(60vh, 420px);
+	overflow: auto;
 }
 
 .leaflet-popup.festival-popup .leaflet-popup-content strong {
@@ -77,6 +89,13 @@
 	list-style: none;
 	padding: 0;
 	margin: 0;
+}
+
+.leaflet-popup.festival-popup .popup-card {
+	max-height: min(60vh, 420px);
+	overflow: auto;
+	padding-right: 2px;
+	overscroll-behavior: contain;
 }
 
 .leaflet-popup.festival-popup .popup-shift-item,
@@ -132,17 +151,63 @@
 }
 
 @media (max-width: 992px) {
+	.map-shell {
+		height: auto;
+		min-height: 0;
+		overflow: visible;
+	}
+
 	.map-frame {
+		position: relative;
+		inset: auto;
+		height: 60vh;
 		min-height: 60vh;
 	}
 
-	.sidebar-frame {
+	.map-overlay {
+		position: static !important;
+		top: auto;
+		right: auto;
+		left: auto;
+		bottom: auto;
+		width: 100% !important;
+		max-width: 100% !important;
+		max-height: none !important;
+		margin: 0.75rem 0 0 !important;
+		box-shadow: none !important;
+		box-sizing: border-box;
+	}
+
+	.map-overlay .list-group {
 		max-height: none;
 	}
 }
 
 @media (max-width: 576px) {
 	.map-frame {
+		height: 56vh;
 		min-height: 56vh;
 	}
+
+	.map-overlay {
+		padding: 0.75rem !important;
+	}
+}
+
+.map-overlay {
+	position: absolute;
+	top: 1rem;
+	right: 1rem;
+	z-index: 1000;
+	width: min(360px, calc(100vw - 2rem));
+	max-height: calc(100% - 2rem);
+	overflow: auto;
+	backdrop-filter: blur(10px);
+	background: rgba(250, 252, 255, 0.92);
+	box-shadow: 0 16px 36px rgba(0, 0, 0, 0.18);
+}
+
+.map-overlay .list-group {
+	max-height: calc(100% - 42px);
+	overflow: auto;
 }
