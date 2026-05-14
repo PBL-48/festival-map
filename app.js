@@ -240,20 +240,6 @@ function validateShiftRows(shiftRows){
   return errors;
 }
 
-function loadSamplePlaces(){
-  const csv = `id,name,lat,lng\n1,ステージ,35.6815,139.7669\n2,フード,35.6820,139.7680\n3,案内所,35.6808,139.7678`;
-  const res = Papa.parse(csv, { header:true, skipEmptyLines:true });
-  places = res.data.map(normalizePlaceRow);
-  renderPlaces();
-}
-
-function loadSampleStalls(){
-  const csv = `name,place,owner,content\n軽音ライブ,ステージ,軽音部,焼きそば\nクラス2-A,フード,2年A組,たこ焼き\n案内所,案内所,実行委員会,パンフレット配布\nDJステージ,ステージ,有志,DJ`;
-  const res = Papa.parse(csv, { header:true, skipEmptyLines:true });
-  setStalls(res.data.map(normalizeStallRow));
-  renderPlaces();
-}
-
 function normalizePlaceRow(r){
   return {
     id: String(r.id ?? '').trim(),
@@ -314,10 +300,15 @@ function showPopupForPlace(place){
   const placeStalls = stallsByPlace.get(normalizePlaceName(place.name)) || [];
   const stallBlocks = [];
 
-  if (placeStalls.length === 0) {
+  const stallsWithShifts = placeStalls.filter(stall=>{
+    return shifts.some(shift=>shift.stall_name === stall.name);
+  });
+  const visibleStalls = stallsWithShifts.length > 0 ? stallsWithShifts : placeStalls;
+
+  if (visibleStalls.length === 0) {
     stallBlocks.push({ name: '未設定', owner: '未設定', content: '未設定', shifts: [] });
   } else {
-    placeStalls.forEach(stall=>{
+    visibleStalls.forEach(stall=>{
       const stallShifts = shifts.filter(shift=>shift.stall_name === stall.name);
       stallBlocks.push({ ...stall, shifts: stallShifts });
     });
