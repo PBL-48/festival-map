@@ -308,3 +308,125 @@
     padding: 16px 8px;
     margin-bottom: 16px;
   }
+
+  /* ナビゲーション */
+  .top-nav {
+    width: 100%;
+    max-width: 480px;
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .nav-link {
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    color: var(--color-ink-soft);
+    padding: 6px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+  }
+  .nav-link:hover { color: var(--color-accent); }
+  .nav-link.is-active {
+    color: var(--color-accent);
+    border-color: var(--color-border);
+    background: var(--color-surface);
+  }
+
+  /* フォーム部品の共通拡張 */
+  select, textarea {
+    width: 100%;
+    padding: 11px 12px;
+    border: 1px solid var(--color-border);
+    border-radius: 8px;
+    font-size: 15px;
+    font-family: var(--font-body);
+    background: var(--color-bg);
+    color: var(--color-ink);
+  }
+  select:focus, textarea:focus {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 1px;
+    background: var(--color-surface);
+  }
+  textarea { resize: vertical; min-height: 60px; }
+
+  .field-row {
+    display: flex;
+    gap: 12px;
+  }
+  .field-row .field { flex: 1; }
+
+  .quick-add-toggle {
+    background: none;
+    border: none;
+    color: var(--color-accent);
+    font-size: 13px;
+    font-family: var(--font-body);
+    cursor: pointer;
+    padding: 4px 0 12px;
+    text-align: left;
+  }
+
+  .quick-add-box {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .quick-add-box input { flex: 1; }
+  .quick-add-box[hidden] { display: none; }
+
+  .member-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 0 0 20px;
+    padding: 0;
+    list-style: none;
+  }
+  .member-chips li {
+    font-size: 12.5px;
+    background: var(--color-bg);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+    padding: 4px 12px;
+  }
+  .member-chips .empty {
+    color: var(--color-ink-soft);
+    border: none;
+    background: none;
+    padding: 0;
+  }
+
+  /* シフト一覧 */
+  .shift-list {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+  }
+  .shift-item {
+    padding: 14px 0;
+    border-bottom: 1px solid var(--color-border);
+  }
+  .shift-item:last-child { border-bottom: none; }
+  .shift-item .top-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+  }
+  .shift-item .time {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: 15px;
+  }
+  .shift-item .who-name { font-size: 13.5px; color: var(--color-ink-soft); }
+  .shift-item .meta {
+    font-size: 12.5px;
+    color: var(--color-ink-soft);
+    margin-top: 4px;
+  }
+  .shift-item .note {
+    font-size: 13px;
+    margin-top: 6px;
+  }
