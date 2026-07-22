@@ -42,36 +42,6 @@
     <a href="index.html" class="back-link">トップページに戻る</a>
   </div>
 
-  <script>
-    (() => {
-      const heading = document.getElementById('heading');
-      const tabLogin = document.getElementById('tab-login');
-      const tabSignup = document.getElementById('tab-signup');
-      const fieldName = document.getElementById('field-name');
-      const passwordInput = document.getElementById('password');
-      const submitBtn = document.getElementById('submit-btn');
-      const messageBox = document.getElementById('message');
-
-      const updateUi = (newMode) => {
-        const isLogin = newMode === 'login';
-        window.authMode = newMode;
-        tabLogin.setAttribute('aria-selected', String(isLogin));
-        tabSignup.setAttribute('aria-selected', String(!isLogin));
-        heading.textContent = isLogin ? 'ログイン' : '新規登録';
-        submitBtn.textContent = isLogin ? 'ログイン' : 'アカウントを作成';
-        fieldName.hidden = isLogin;
-        passwordInput.autocomplete = isLogin ? 'current-password' : 'new-password';
-        messageBox.className = 'message';
-        messageBox.textContent = '';
-      };
-
-      window.authSetMode = updateUi;
-      tabLogin.addEventListener('click', () => updateUi('login'));
-      tabSignup.addEventListener('click', () => updateUi('signup'));
-      updateUi('login');
-    })();
-  </script>
-
   <script type="module" src="js/auth.js"></script>
 </body>
 </html>
