@@ -1,55 +1,54 @@
-# Festival Map — シフト可視化 (簡易プロトタイプ)
+# 認証機能の導入手順
 
-このリポジトリは学園祭の屋台と友達のシフトをOpenStreetMap上に表示する簡易Webアプリのプロトタイプです。
+## ファイル構成
 
-## ファイル
+```
+festival-map-auth/
+├── auth.html            ログイン・新規登録ページ
+├── dashboard.html        ログイン後のページ(この上に今後グループ機能等を追加)
+├── supabase-config.js    ★ここにSupabaseの接続情報を書く
+├── css/style.css         共通スタイル
+└── js/
+    ├── supabaseClient.js  Supabaseクライアントの初期化
+    ├── sessionGuard.js     ログイン必須ページ用の共通処理
+    ├── auth.js             ログイン・新規登録フォームの処理
+    └── dashboard.js        ダッシュボードの処理
+```
 
-- [index.html](index.html) — エントリ。
-- [app.js](app.js) — メインロジック（Leaflet + PapaParse）。
-- [styles.css](styles.css) — スタイル。
-- [places.csv](places.csv) — サンプルの場所CSV。
-- [stalls.csv](stalls.csv) — サンプルの出店CSV。
-- [shifts.csv](shifts.csv) — 参考用のシフトCSV。
+## 導入手順
 
-## CSVフォーマット
+1. これらのファイル一式を、既存の `festival-map` リポジトリの直下(もしくは任意のサブフォルダ)にコピーする
+2. `supabase-config.js` を開き、以下を書き換える
+   - `SUPABASE_URL`: Supabaseダッシュボードの Project Settings → API に表示されている Project URL
+   - `SUPABASE_ANON_KEY`: 同じ画面の anon public key
+3. GitHub Pagesの設定で、Supabaseダッシュボードの **Authentication → URL Configuration** の
+   Site URL / Redirect URLs に、あなたのGitHub PagesのURL
+   (例: `https://pbl-48.github.io/festival-map/`)を追加しておく
+   (パスワードリセットメールなどのリンクが正しく機能するようになります)
+4. コミット・プッシュしてGitHub Pagesにデプロイすれば、`auth.html` からログイン・新規登録ができます
 
-### 場所CSV (`places.csv`)
+## 動作の流れ
 
-- ヘッダ: `id,name,lat,lng`
-- `name` は場所名です。
-- 例: `1,ステージ,35.6815,139.7669`
-- [Google マイマップ](https://www.google.com/maps/d/u/0/edit?mid=1BythfKWsq5MXOL_D3_keSonX1tmgkkM&usp=sharing)を利用して作成しました。
+- `auth.html` を開く → ログイン/新規登録タブを切り替えてフォーム送信
+- 新規登録すると、Supabase側の `handle_new_user` トリガーが自動で `profiles` テーブルに行を作る
+- ログイン成功後は `dashboard.html` にリダイレクトされる
+- `dashboard.html` は読み込み時に `requireAuth()` でセッションを確認し、
+  ログインしていなければ自動的に `auth.html` に戻す
+- ログアウトボタンでセッションを破棄して `auth.html` に戻る
 
-### 出店CSV (`stalls.csv`)
+## 既存の index.html への組み込み方
 
-- ヘッダ: `name,place,owner,content`
-- `place` は [places.csv](places.csv) の `name` と結合するキーです。
-  - 建物系は教室の部分を手作業で削除して場所csvと結合するようにしています。
-  - 複数個所にまたがる場合も一か所だけ代表点として扱いました。
-- `name` は出店名です。重複しない前提です。
-- `owner` / `content` は出店詳細です。
-- 例: `軽音ライブ,ステージ,軽音部,焼きそば`
-- 五月祭公式のAPIから取得したjsonファイル `stalls.json` を、`json_parse.py`でcsvに変換しました。
+既存のトップページ(CSV入力・シフト表示のページ)にログイン状態を反映させたい場合は、
+ページの `<script type="module">` 内で以下のように呼び出してください。
 
-### シフトCSV (`shifts.csv`)
+```js
+import { requireAuth } from './js/sessionGuard.js';
 
-- ヘッダ: `name,stall_name,date,start,end`
-- `stall_name` は [stalls.csv](stalls.csv) の `name` と一致させる必要があります。
-  - 本当は企画IDを外部キーとするのが最も良いのですが、企画責任者ではない人たちが知っていることは少なく、そのほかの情報で最も表記ゆれが少ないであろう属性がこれだと判断したためです。
-- `date` は省略可能（空なら今日として扱う）。
-- `start` / `end`: `HH:MM` (24時間)
-- 例: `Taro,軽音ライブ,2026-05-16,10:00,12:30`
+const user = await requireAuth(); // 未ログインなら自動でauth.htmlへ
+// user.id を使って、以降のグループ・シフト機能のAPI呼び出しに利用する
+```
 
-## 使い方
+## 次のステップ
 
-1. ブラウザで [index.html](index.html) を開きます。
-2. [places.csv](places.csv) と [stalls.csv](stalls.csv) を自動読み込みし、`places.name` と `stalls.place` で結合します。
-3. 右側に [shifts.csv](shifts.csv) のサンプルシフトが表示されます。`stall_name` は企画名で、`stalls.csv` の `name` と完全一致させます。
-4. シフトCSVを選択して「このデバイスとブラウザに保存」を押すと、CSV内容を取り込み、ブラウザの `localStorage` にJSONで保存します。
-5. 再読み込み時は localStorage のシフトが自動反映されます。
-6. マップ上のピンにホバーすると、出店名、出店主体、出店内容、予定が表示されます。
-
-## 入力チェック
-
-- `stall_name` は [stalls.csv](stalls.csv) の `name` と完全一致が必須です。
-- 未登録の企画名が含まれるシフトCSVは保存できません。
+このダッシュボード(`dashboard.html`)の中身に、次は
+「グループ作成・招待コードで参加」の機能を追加していきます。

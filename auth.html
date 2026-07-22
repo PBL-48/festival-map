@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ログイン — Festival Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="card">
+    <p class="brand">FESTIVAL MAP</p>
+    <h1 id="heading">ログイン</h1>
+
+    <div class="tabs" role="tablist">
+      <button class="tab" id="tab-login" role="tab" aria-selected="true">ログイン</button>
+      <button class="tab" id="tab-signup" role="tab" aria-selected="false">新規登録</button>
+    </div>
+
+    <div class="message" id="message" role="alert"></div>
+
+    <form id="auth-form">
+      <div class="field" id="field-name" hidden>
+        <label for="display-name">表示名</label>
+        <input type="text" id="display-name" autocomplete="nickname" placeholder="例: 山田太郎">
+      </div>
+
+      <div class="field">
+        <label for="email">メールアドレス</label>
+        <input type="email" id="email" autocomplete="email" required>
+      </div>
+
+      <div class="field">
+        <label for="password">パスワード</label>
+        <input type="password" id="password" autocomplete="current-password" required minlength="6">
+      </div>
+
+      <button type="submit" class="primary" id="submit-btn">ログイン</button>
+    </form>
+
+    <a href="index.html" class="back-link">トップページに戻る</a>
+  </div>
+
+  <script type="module" src="js/auth.js"></script>
+</body>
+</html>
