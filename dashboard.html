@@ -16,10 +16,46 @@
 
   <div class="card">
     <p class="brand">FESTIVAL MAP</p>
-    <h1>マイページ</h1>
-    <p style="text-align:center; color: var(--color-ink-soft); font-size: 14px;">
-      ここに今後、グループ作成・参加やシフト入力の機能を追加していきます。
-    </p>
+    <h1>参加しているグループ</h1>
+
+    <div class="message" id="group-message" role="alert"></div>
+
+    <ul class="group-list" id="group-list">
+      <li class="group-empty" id="group-empty">まだどのグループにも参加していません</li>
+    </ul>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">グループを作成する</h2>
+    <form id="create-group-form">
+      <div class="field">
+        <label for="new-group-name">グループ名</label>
+        <input type="text" id="new-group-name" placeholder="例: ○○サークル 模擬店係" required>
+      </div>
+      <button type="submit" class="primary">作成する</button>
+    </form>
+  </div>
+
+  <div class="card">
+    <h2 class="section-title">招待コードで参加する</h2>
+    <form id="join-group-form">
+      <div class="field">
+        <label for="invite-code-input">招待コード</label>
+        <input type="text" id="invite-code-input" placeholder="8桁のコード" required>
+      </div>
+      <button type="submit" class="primary">参加する</button>
+    </form>
+  </div>
+
+  <!-- 招待コードを一度だけ表示するモーダル -->
+  <div class="modal-backdrop" id="code-modal" hidden>
+    <div class="modal">
+      <h2 class="section-title" id="code-modal-title">招待コード</h2>
+      <p class="modal-note">このコードは今しか表示されません。参加してほしい人に安全な方法で伝えてください。</p>
+      <div class="code-display" id="code-display"></div>
+      <button class="primary" id="code-copy-btn">コピーする</button>
+      <button class="link-button" id="code-close-btn" style="width:100%; margin-top:10px;">閉じる</button>
+    </div>
   </div>
 
   <script type="module" src="js/dashboard.js"></script>

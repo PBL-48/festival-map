@@ -1,5 +1,6 @@
 import { supabase } from './supabaseClient.js';
 import { requireAuth, watchAuthChanges } from './sessionGuard.js';
+import { initGroupFeatures } from './groups.js';
 
 const whoEl = document.getElementById('who');
 const logoutBtn = document.getElementById('logout-btn');
@@ -13,6 +14,7 @@ if (user) {
     .single();
 
   whoEl.textContent = `${profile?.display_name ?? user.email} でログイン中`;
+  initGroupFeatures(user.id);
 }
 
 watchAuthChanges();
