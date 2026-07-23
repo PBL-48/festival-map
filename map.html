@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>マップ — Festival Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</head>
+<body class="map-page">
+  <div class="dash-header" style="max-width:1120px;">
+    <span class="who" id="who">読み込み中...</span>
+    <div style="display:flex; gap:8px;">
+      <a href="dashboard.html" class="link-button">グループ管理</a>
+      <a href="shifts.html" class="link-button">シフト提出</a>
+      <button class="link-button" id="logout-btn">ログアウト</button>
+    </div>
+  </div>
+
+  <nav class="top-nav" style="max-width:1120px;">
+    <a href="map.html" class="nav-link is-active">マップ</a>
+    <a href="dashboard.html" class="nav-link">グループ</a>
+    <a href="shifts.html" class="nav-link">シフト</a>
+  </nav>
+
+  <div class="field" style="max-width:1120px; width:100%;" id="event-select-wrap" hidden>
+    <label for="event-select">表示するイベント</label>
+    <select id="event-select"></select>
+  </div>
+
+  <div class="message" id="map-message" role="alert" style="max-width:1120px; width:100%;"></div>
+
+  <div class="map-layout">
+    <div class="map-pane">
+      <div id="leaflet-map"></div>
+      <div class="map-hint" id="place-hint" hidden>地図をクリックしてブースの場所を決めてください</div>
+      <button class="primary map-floating-btn" id="add-booth-btn">＋ブースを追加</button>
+    </div>
+
+    <div class="side-pane">
+      <div class="card" style="max-width:none;">
+        <h2 class="section-title">表示するグループ</h2>
+        <div class="group-checkbox-list" id="group-checkboxes">
+          <p class="group-empty">グループに参加すると表示されます</p>
+        </div>
+      </div>
+
+      <div class="card" style="max-width:none;">
+        <h2 class="section-title">現在シフト中</h2>
+        <div id="onshift-list">
+          <p class="group-empty">読み込み中...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 新規ブースの名前入力モーダル -->
+  <div class="modal-backdrop" id="booth-name-modal" hidden>
+    <div class="modal">
+      <h2 class="section-title">ブースの名前</h2>
+      <div class="field">
+        <label for="new-booth-name-input">場所名</label>
+        <input type="text" id="new-booth-name-input" placeholder="例: 中庭ステージ前">
+      </div>
+      <button class="primary" id="confirm-booth-btn">追加する</button>
+      <button class="link-button" id="cancel-booth-btn" style="width:100%; margin-top:10px;">キャンセル</button>
+    </div>
+  </div>
+
+  <script type="module" src="js/map.js"></script>
+</body>
+</html>

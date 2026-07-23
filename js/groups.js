@@ -33,6 +33,20 @@ codeCopyBtn.addEventListener('click', async () => {
   setTimeout(() => { codeCopyBtn.textContent = 'コピーする'; }, 1500);
 });
 
+async function loadEventOptions() {
+  const eventSelect = document.getElementById('new-group-event');
+  const { data, error } = await supabase.from('events').select('id, name').order('event_date', { ascending: true });
+  if (error) { showMessage(translateGroupError(error), 'error'); return; }
+
+  eventSelect.innerHTML = '<option value="">イベントを選択してください</option>';
+  for (const ev of data || []) {
+    const opt = document.createElement('option');
+    opt.value = ev.id;
+    opt.textContent = ev.name;
+    eventSelect.appendChild(opt);
+  }
+}
+
 function translateGroupError(error) {
   const msg = error?.message || '';
   if (msg.includes('invalid code')) return '招待コードが正しくありません';
@@ -118,28 +132,42 @@ async function leaveGroup(groupId, userId) {
 
 export function initGroupFeatures(userId) {
   loadGroups(userId);
+  loadEventOptions();
 
+  const createBtn = createForm.querySelector('button[type="submit"]');
   createForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideMessage();
     const nameInput = document.getElementById('new-group-name');
+    const eventSelect = document.getElementById('new-group-event');
     const name = nameInput.value.trim();
-    if (!name) return;
+    const eventId = eventSelect.value;
+    if (!name || !eventId) return;
 
-    const { data, error } = await supabase
-      .rpc('create_group', { p_name: name })
-      .single();
+    createBtn.disabled = true;
+    createBtn.textContent = '作成中...';
 
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .rpc('create_group', { p_name: name, p_event_id: eventId })
+        .single();
+
+      if (error) throw error;
+
+      nameInput.value = '';
+      eventSelect.value = '';
+      await loadGroups(userId);
+      openCodeModal(`「${name}」の招待コード`, data.invite_code);
+    } catch (error) {
+      console.error('create_group failed:', error);
       showMessage(translateGroupError(error), 'error');
-      return;
+    } finally {
+      createBtn.disabled = false;
+      createBtn.textContent = '作成する';
     }
-
-    nameInput.value = '';
-    await loadGroups(userId);
-    openCodeModal(`「${name}」の招待コード`, data.invite_code);
   });
 
+  const joinBtn = joinForm.querySelector('button[type="submit"]');
   joinForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     hideMessage();
@@ -147,17 +175,25 @@ export function initGroupFeatures(userId) {
     const code = codeInput.value.trim();
     if (!code) return;
 
-    const { data, error } = await supabase
-      .rpc('join_group_by_code', { p_code: code })
-      .single();
+    joinBtn.disabled = true;
+    joinBtn.textContent = '参加中...';
 
-    if (error) {
+    try {
+      const { data, error } = await supabase
+        .rpc('join_group_by_code', { p_code: code })
+        .single();
+
+      if (error) throw error;
+
+      codeInput.value = '';
+      showMessage(`「${data.group_name}」に参加しました`, 'success');
+      await loadGroups(userId);
+    } catch (error) {
+      console.error('join_group_by_code failed:', error);
       showMessage(translateGroupError(error), 'error');
-      return;
+    } finally {
+      joinBtn.disabled = false;
+      joinBtn.textContent = '参加する';
     }
-
-    codeInput.value = '';
-    showMessage(`「${data.group_name}」に参加しました`, 'success');
-    await loadGroups(userId);
   });
 }

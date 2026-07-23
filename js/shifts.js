@@ -32,6 +32,13 @@ function translateError(error) {
   return `エラーが発生しました: ${error?.message || ''}`;
 }
 
+// 他人の自由入力(ブース名・メモ等)をinnerHTMLに差し込む際は必ずエスケープする
+function escapeHtml(str) {
+  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
+}
+
 function fillSelect(select, items, placeholder) {
   select.innerHTML = `<option value="">${placeholder}</option>`;
   for (const item of items) {
@@ -214,17 +221,15 @@ async function loadShiftList(userId) {
     const li = document.createElement('li');
     li.className = 'shift-item';
 
-    const metaParts = [s.groups?.name];
-    if (s.events?.name) metaParts.push(s.events.name);
-    if (s.booths?.name) metaParts.push(s.booths.name);
+    const metaParts = [s.groups?.name, s.events?.name, s.booths?.name].filter(Boolean).map(escapeHtml);
 
     li.innerHTML = `
       <div class="top-row">
-        <span class="time">${s.shift_date} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}</span>
-        <span class="who-name">${s.profiles?.display_name ?? ''}</span>
+        <span class="time">${escapeHtml(s.shift_date)} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}</span>
+        <span class="who-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
       </div>
-      <div class="meta">${metaParts.filter(Boolean).join(' / ')}</div>
-      ${s.note ? `<div class="note">${s.note}</div>` : ''}
+      <div class="meta">${metaParts.join(' / ')}</div>
+      ${s.note ? `<div class="note">${escapeHtml(s.note)}</div>` : ''}
     `;
     shiftListEl.appendChild(li);
   }

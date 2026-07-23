@@ -15,6 +15,7 @@
   </div>
 
   <nav class="top-nav">
+    <a href="map.html" class="nav-link">マップ</a>
     <a href="dashboard.html" class="nav-link is-active">グループ</a>
     <a href="shifts.html" class="nav-link">シフト</a>
   </nav>
@@ -36,6 +37,12 @@
       <div class="field">
         <label for="new-group-name">グループ名</label>
         <input type="text" id="new-group-name" placeholder="例: ○○サークル 模擬店係" required>
+      </div>
+      <div class="field">
+        <label for="new-group-event">参加するイベント</label>
+        <select id="new-group-event" required>
+          <option value="">イベントを選択してください</option>
+        </select>
       </div>
       <button type="submit" class="primary">作成する</button>
     </form>
