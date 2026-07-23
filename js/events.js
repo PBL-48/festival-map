@@ -1,17 +1,21 @@
 import { supabase } from './supabaseClient.js';
 import { requireAuth } from './sessionGuard.js';
+import { buildEventLabel, loadEventsWithRange } from './eventUtils.js';
 
 const whoEl = document.getElementById('who');
 const logoutBtn = document.getElementById('logout-btn');
 const messageEl = document.getElementById('event-message');
 
+const createEventModal = document.getElementById('create-event-modal');
+const openCreateEventModalBtn = document.getElementById('open-create-event-modal');
+const closeCreateEventModalBtn = document.getElementById('close-create-event-modal');
 const createEventForm = document.getElementById('create-event-form');
 const eventNameInput = document.getElementById('event-name');
-const eventDateInput = document.getElementById('event-date');
+const eventStartDateInput = document.getElementById('event-start-date');
+const eventEndDateInput = document.getElementById('event-end-date');
 
 const adminEventSelect = document.getElementById('admin-event-select');
-const eventBoothList = document.getElementById('event-booth-list');
-const eventProgramList = document.getElementById('event-program-list');
+const eventDetailLink = document.getElementById('event-detail-link');
 
 const createBoothForm = document.getElementById('create-booth-form');
 const boothNameInput = document.getElementById('booth-name');
@@ -21,13 +25,13 @@ const createProgramForm = document.getElementById('create-program-form');
 const programBoothSelect = document.getElementById('program-booth-select');
 const programNameInput = document.getElementById('program-name');
 const programOrganizerInput = document.getElementById('program-organizer');
-const programStartInput = document.getElementById('program-start');
-const programEndInput = document.getElementById('program-end');
 
 let eventMap;
-let eventMarkerLayer;
+let selectedMarkerLayer;
+let boothMarkerLayer;
 let selectedLatLng = null;
 let currentEventId = '';
+let eventSchema = 'range';
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -38,37 +42,18 @@ function translateError(error) {
   return `エラーが発生しました: ${error?.message || ''}`;
 }
 
-function formatTime(t) {
-  return t ? t.slice(0, 5) : '';
-}
-
 async function loadEvents() {
-  const { data, error } = await supabase.from('events').select('id, name, event_date').order('event_date', { ascending: true });
-  if (error) {
-    showMessage(translateError(error), 'error');
-    return [];
+  const result = await loadEventsWithRange(supabase);
+  if (result.error) {
+    showMessage(translateError(result.error), 'error');
   }
-  return data || [];
+  eventSchema = result.schema;
+  return result.events;
 }
 
 async function loadBooths(eventId) {
   if (!eventId) return [];
   const { data, error } = await supabase.from('booths').select('id, name, lat, lng').eq('event_id', eventId).order('name');
-  if (error) {
-    showMessage(translateError(error), 'error');
-    return [];
-  }
-  return data || [];
-}
-
-async function loadPrograms(boothIds) {
-  if (boothIds.length === 0) return [];
-  const { data, error } = await supabase
-    .from('programs')
-    .select('id, name, organizer, start_time, end_time, booth_id, booths(name)')
-    .in('booth_id', boothIds)
-    .order('start_time', { ascending: true });
-
   if (error) {
     showMessage(translateError(error), 'error');
     return [];
@@ -84,17 +69,25 @@ function updateBoothMapHint() {
   boothCoordsText.textContent = `座標: ${selectedLatLng.lat.toFixed(5)}, ${selectedLatLng.lng.toFixed(5)}`;
 }
 
-function clearBoothMarker() {
-  eventMarkerLayer.clearLayers();
+function clearSelectedBoothMarker() {
+  selectedMarkerLayer.clearLayers();
   selectedLatLng = null;
   updateBoothMapHint();
 }
 
-function setBoothMarker(latlng) {
+function setSelectedBoothMarker(latlng) {
   selectedLatLng = latlng;
-  eventMarkerLayer.clearLayers();
-  L.marker(latlng).addTo(eventMarkerLayer);
+  selectedMarkerLayer.clearLayers();
+  L.marker(latlng).addTo(selectedMarkerLayer);
   updateBoothMapHint();
+}
+
+function renderExistingBoothMarkers(booths) {
+  boothMarkerLayer.clearLayers();
+  for (const booth of booths) {
+    if (booth.lat == null || booth.lng == null) continue;
+    L.marker([booth.lat, booth.lng]).bindTooltip(booth.name, { direction: 'top' }).addTo(boothMarkerLayer);
+  }
 }
 
 function initEventMap() {
@@ -103,49 +96,16 @@ function initEventMap() {
     maxZoom: 19,
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(eventMap);
-  eventMarkerLayer = L.layerGroup().addTo(eventMap);
+  boothMarkerLayer = L.layerGroup().addTo(eventMap);
+  selectedMarkerLayer = L.layerGroup().addTo(eventMap);
 
   eventMap.on('click', (e) => {
     if (!currentEventId) {
       showMessage('先にイベントを選択してください', 'error');
       return;
     }
-    setBoothMarker(e.latlng);
+    setSelectedBoothMarker(e.latlng);
   });
-}
-
-function renderEventSummary(booths, programs) {
-  eventBoothList.innerHTML = '';
-  eventProgramList.innerHTML = '';
-
-  if (!currentEventId) {
-    eventBoothList.innerHTML = '<li class="group-empty">イベントを選ぶと表示されます</li>';
-    eventProgramList.innerHTML = '<li class="group-empty">イベントを選ぶと表示されます</li>';
-    return;
-  }
-
-  if (booths.length === 0) {
-    eventBoothList.innerHTML = '<li class="group-empty">まだブースがありません</li>';
-  } else {
-    for (const booth of booths) {
-      const li = document.createElement('li');
-      li.textContent = booth.name;
-      eventBoothList.appendChild(li);
-    }
-  }
-
-  if (programs.length === 0) {
-    eventProgramList.innerHTML = '<li class="group-empty">まだ企画がありません</li>';
-  } else {
-    for (const program of programs) {
-      const li = document.createElement('li');
-      const parts = [program.name];
-      if (program.booths?.name) parts.push(program.booths.name);
-      if (program.start_time) parts.push(`${formatTime(program.start_time)}〜${formatTime(program.end_time)}`);
-      li.textContent = parts.join(' / ');
-      eventProgramList.appendChild(li);
-    }
-  }
 }
 
 function fillProgramBoothSelect(booths) {
@@ -161,18 +121,24 @@ function fillProgramBoothSelect(booths) {
 async function refreshSelectedEvent(eventId) {
   currentEventId = eventId;
   const booths = await loadBooths(eventId);
-  const programs = await loadPrograms(booths.map((booth) => booth.id));
 
   fillProgramBoothSelect(booths);
-  renderEventSummary(booths, programs);
-  clearBoothMarker();
+  renderExistingBoothMarkers(booths);
+  clearSelectedBoothMarker();
+
+  eventDetailLink.href = currentEventId
+    ? `event-details.html?eventId=${encodeURIComponent(currentEventId)}`
+    : 'event-details.html';
 
   if (!eventId) {
     eventMap.setView([35.6812, 139.7671], 16);
     return;
   }
 
-  const boothPoints = booths.filter((booth) => booth.lat != null && booth.lng != null).map((booth) => [booth.lat, booth.lng]);
+  const boothPoints = booths
+    .filter((booth) => booth.lat != null && booth.lng != null)
+    .map((booth) => [booth.lat, booth.lng]);
+
   if (boothPoints.length > 0) {
     eventMap.fitBounds(boothPoints, { padding: [40, 40], maxZoom: 18 });
   } else {
@@ -185,7 +151,7 @@ async function refreshAdminEventOptions(events, preferredEventId = '') {
   for (const event of events) {
     const opt = document.createElement('option');
     opt.value = event.id;
-    opt.textContent = event.event_date ? `${event.name} (${event.event_date})` : event.name;
+    opt.textContent = buildEventLabel(event);
     adminEventSelect.appendChild(opt);
   }
 
@@ -198,21 +164,48 @@ async function refreshAdminEventOptions(events, preferredEventId = '') {
   await refreshSelectedEvent(adminEventSelect.value);
 }
 
+function openCreateEventModal() {
+  createEventModal.hidden = false;
+}
+
+function closeCreateEventModal() {
+  createEventModal.hidden = true;
+}
+
+openCreateEventModalBtn.addEventListener('click', openCreateEventModal);
+closeCreateEventModalBtn.addEventListener('click', closeCreateEventModal);
+
 createEventForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const name = eventNameInput.value.trim();
-  const eventDate = eventDateInput.value;
-  if (!name || !eventDate) return;
+  const startDate = eventStartDateInput.value;
+  const endDate = eventEndDateInput.value;
+  if (!name || !startDate || !endDate) return;
+  if (startDate > endDate) {
+    showMessage('開始日は終了日以前にしてください', 'error');
+    return;
+  }
 
-  const { data, error } = await supabase.from('events').insert({ name, event_date: eventDate }).select('id').single();
+  if (eventSchema === 'single' && startDate !== endDate) {
+    showMessage('複数日イベントには start_date / end_date 対応のDB定義が必要です', 'error');
+    return;
+  }
+
+  const insertPayload = eventSchema === 'single'
+    ? { name, event_date: startDate }
+    : { name, start_date: startDate, end_date: endDate };
+
+  const { data, error } = await supabase.from('events').insert(insertPayload).select('id').single();
   if (error) {
     showMessage(translateError(error), 'error');
     return;
   }
 
   eventNameInput.value = '';
-  eventDateInput.value = '';
+  eventStartDateInput.value = '';
+  eventEndDateInput.value = '';
+  closeCreateEventModal();
   showMessage('イベントを作成しました', 'success');
   const events = await loadEvents();
   await refreshAdminEventOptions(events, data.id);
@@ -265,8 +258,6 @@ createProgramForm.addEventListener('submit', async (e) => {
     booth_id: boothId,
     name,
     organizer: programOrganizerInput.value.trim() || null,
-    start_time: programStartInput.value || null,
-    end_time: programEndInput.value || null,
   });
 
   if (error) {
@@ -276,10 +267,7 @@ createProgramForm.addEventListener('submit', async (e) => {
 
   programNameInput.value = '';
   programOrganizerInput.value = '';
-  programStartInput.value = '';
-  programEndInput.value = '';
   showMessage('企画を登録しました', 'success');
-  await refreshSelectedEvent(currentEventId);
 });
 
 const user = await requireAuth();

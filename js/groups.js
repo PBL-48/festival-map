@@ -1,10 +1,17 @@
 import { supabase } from './supabaseClient.js';
+import { buildEventLabel, loadEventsWithRange } from './eventUtils.js';
 
 const listEl = document.getElementById('group-list');
 const emptyEl = document.getElementById('group-empty');
 const messageEl = document.getElementById('group-message');
 const createForm = document.getElementById('create-group-form');
 const joinForm = document.getElementById('join-group-form');
+const createGroupModal = document.getElementById('create-group-modal');
+const joinGroupModal = document.getElementById('join-group-modal');
+const openCreateGroupModalBtn = document.getElementById('open-create-group-modal');
+const openJoinGroupModalBtn = document.getElementById('open-join-group-modal');
+const closeCreateGroupModalBtn = document.getElementById('close-create-group-modal');
+const closeJoinGroupModalBtn = document.getElementById('close-join-group-modal');
 
 const codeModal = document.getElementById('code-modal');
 const codeModalTitle = document.getElementById('code-modal-title');
@@ -35,14 +42,14 @@ codeCopyBtn.addEventListener('click', async () => {
 
 async function loadEventOptions() {
   const eventSelect = document.getElementById('new-group-event');
-  const { data, error } = await supabase.from('events').select('id, name').order('event_date', { ascending: true });
-  if (error) { showMessage(translateGroupError(error), 'error'); return; }
+  const result = await loadEventsWithRange(supabase);
+  if (result.error) { showMessage(translateGroupError(result.error), 'error'); return; }
 
   eventSelect.innerHTML = '<option value="">イベントを選択してください</option>';
-  for (const ev of data || []) {
+  for (const ev of result.events) {
     const opt = document.createElement('option');
     opt.value = ev.id;
-    opt.textContent = ev.name;
+    opt.textContent = buildEventLabel(ev);
     eventSelect.appendChild(opt);
   }
 }
@@ -134,6 +141,11 @@ export function initGroupFeatures(userId) {
   loadGroups(userId);
   loadEventOptions();
 
+  openCreateGroupModalBtn.addEventListener('click', () => { createGroupModal.hidden = false; });
+  openJoinGroupModalBtn.addEventListener('click', () => { joinGroupModal.hidden = false; });
+  closeCreateGroupModalBtn.addEventListener('click', () => { createGroupModal.hidden = true; });
+  closeJoinGroupModalBtn.addEventListener('click', () => { joinGroupModal.hidden = true; });
+
   const createBtn = createForm.querySelector('button[type="submit"]');
   createForm.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -158,6 +170,7 @@ export function initGroupFeatures(userId) {
       eventSelect.value = '';
       await loadGroups(userId);
       openCodeModal(`「${name}」の招待コード`, data.invite_code);
+      createGroupModal.hidden = true;
     } catch (error) {
       console.error('create_group failed:', error);
       showMessage(translateGroupError(error), 'error');
@@ -188,6 +201,7 @@ export function initGroupFeatures(userId) {
       codeInput.value = '';
       showMessage(`「${data.group_name}」に参加しました`, 'success');
       await loadGroups(userId);
+      joinGroupModal.hidden = true;
     } catch (error) {
       console.error('join_group_by_code failed:', error);
       showMessage(translateGroupError(error), 'error');

@@ -35,6 +35,23 @@
     padding: 8vh 16px 40px;
   }
 
+  body.centered-page {
+    align-items: center;
+  }
+
+  body.centered-page .message {
+    width: 100%;
+    max-width: 380px;
+  }
+
+  body.events-page .message {
+    max-width: 1120px;
+  }
+
+  body.details-page .message {
+    max-width: 960px;
+  }
+
   .card {
     width: 100%;
     max-width: 380px;
@@ -273,6 +290,13 @@
     margin-bottom: 16px;
   }
   .card-header-row .section-title { margin: 0; }
+
+  .inline-actions {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
 
   .group-list {
     list-style: none;
@@ -527,10 +551,20 @@
     max-width: none;
   }
 
+  .details-card {
+    max-width: 960px;
+  }
+
   .event-summary-grid {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
+  }
+
+  @media (max-width: 760px) {
+    .event-summary-grid {
+      grid-template-columns: 1fr;
+    }
   }
 
   .event-map-shell {
@@ -574,8 +608,8 @@
 
   #leaflet-map {
     width: 100%;
-    height: 72vh;
-    min-height: 420px;
+    height: clamp(320px, 72vh, 900px);
+    min-height: 320px;
     border-radius: 16px;
     border: 1px solid var(--color-border);
   }
@@ -650,5 +684,8 @@
   @media (max-width: 760px) {
     .map-layout { flex-direction: column; }
     .side-pane { max-width: none; width: 100%; }
-    #leaflet-map { height: 55vh; }
+    #leaflet-map {
+      height: clamp(300px, 56svh, 540px);
+      min-height: 300px;
+    }
   }

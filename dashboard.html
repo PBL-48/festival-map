@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="centered-page">
   <nav class="app-nav">
     <span class="who" id="who">読み込み中...</span>
     <div class="app-nav-links">
@@ -24,7 +24,13 @@
 
   <div class="card">
     <p class="brand">FESTIVAL MAP</p>
-    <h1>参加しているグループ</h1>
+    <div class="card-header-row">
+      <h1 style="margin:0;">参加しているグループ</h1>
+      <div class="inline-actions">
+        <button type="button" class="button-secondary" id="open-create-group-modal">＋ 作成</button>
+        <button type="button" class="button-secondary" id="open-join-group-modal">＋ 参加</button>
+      </div>
+    </div>
 
     <div class="message" id="group-message" role="alert"></div>
 
@@ -33,32 +39,38 @@
     </ul>
   </div>
 
-  <div class="card">
-    <h2 class="section-title">グループを作成する</h2>
-    <form id="create-group-form">
-      <div class="field">
-        <label for="new-group-name">グループ名</label>
-        <input type="text" id="new-group-name" placeholder="例: ○○サークル 模擬店係" required>
-      </div>
-      <div class="field">
-        <label for="new-group-event">参加するイベント</label>
-        <select id="new-group-event" required>
-          <option value="">イベントを選択してください</option>
-        </select>
-      </div>
-      <button type="submit" class="primary">作成する</button>
-    </form>
+  <div class="modal-backdrop" id="create-group-modal" hidden>
+    <div class="modal">
+      <h2 class="section-title">グループを作成する</h2>
+      <form id="create-group-form">
+        <div class="field">
+          <label for="new-group-name">グループ名</label>
+          <input type="text" id="new-group-name" placeholder="例: ○○サークル 模擬店係" required>
+        </div>
+        <div class="field">
+          <label for="new-group-event">参加するイベント</label>
+          <select id="new-group-event" required>
+            <option value="">イベントを選択してください</option>
+          </select>
+        </div>
+        <button type="submit" class="primary">作成する</button>
+      </form>
+      <button class="link-button" id="close-create-group-modal" style="width:100%; margin-top:10px;">閉じる</button>
+    </div>
   </div>
 
-  <div class="card">
-    <h2 class="section-title">招待コードで参加する</h2>
-    <form id="join-group-form">
-      <div class="field">
-        <label for="invite-code-input">招待コード</label>
-        <input type="text" id="invite-code-input" placeholder="8桁のコード" required>
-      </div>
-      <button type="submit" class="primary">参加する</button>
-    </form>
+  <div class="modal-backdrop" id="join-group-modal" hidden>
+    <div class="modal">
+      <h2 class="section-title">招待コードで参加する</h2>
+      <form id="join-group-form">
+        <div class="field">
+          <label for="invite-code-input">招待コード</label>
+          <input type="text" id="invite-code-input" placeholder="8桁のコード" required>
+        </div>
+        <button type="submit" class="primary">参加する</button>
+      </form>
+      <button class="link-button" id="close-join-group-modal" style="width:100%; margin-top:10px;">閉じる</button>
+    </div>
   </div>
 
   <!-- 招待コードを一度だけ表示するモーダル -->

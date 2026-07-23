@@ -1,12 +1,13 @@
 import { supabase } from './supabaseClient.js';
 import { requireAuth } from './sessionGuard.js';
+import { buildEventLabel, loadEventsWithRange } from './eventUtils.js';
 
 const whoEl = document.getElementById('who');
 const logoutBtn = document.getElementById('logout-btn');
 const messageEl = document.getElementById('shift-message');
 
 const shiftForm = document.getElementById('shift-form');
-const groupSelect = document.getElementById('shift-group-select');
+const groupCheckboxesEl = document.getElementById('shift-group-checkboxes');
 const circleMembersEl = document.getElementById('circle-members');
 const eventSelect = document.getElementById('shift-event-select');
 const boothInput = document.getElementById('shift-booth-input');
@@ -14,6 +15,8 @@ const boothIdInput = document.getElementById('shift-booth-id');
 const boothSuggestions = document.getElementById('shift-booth-suggestions');
 
 let eventBooths = [];
+let groups = [];
+let selectedGroupIds = new Set();
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -23,19 +26,12 @@ function translateError(error) {
   return `エラーが発生しました: ${error?.message || ''}`;
 }
 
-// 他人の自由入力(ブース名・メモ等)をinnerHTMLに差し込む際は必ずエスケープする
-function escapeHtml(str) {
-  return String(str ?? '').replace(/[&<>"']/g, (ch) => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
-  }[ch]));
-}
-
 function fillSelect(select, items, placeholder) {
   select.innerHTML = `<option value="">${placeholder}</option>`;
   for (const item of items) {
     const opt = document.createElement('option');
     opt.value = item.id;
-    opt.textContent = item.name;
+    opt.textContent = item.label ?? item.name;
     select.appendChild(opt);
   }
 }
@@ -44,16 +40,48 @@ function fillSelect(select, items, placeholder) {
 async function loadMyGroups(userId) {
   const { data, error } = await supabase
     .from('group_members')
-    .select('groups(id, name)')
+    .select('groups(id, name, event_id)')
     .eq('user_id', userId);
 
   if (error) { showMessage(translateError(error), 'error'); return []; }
-  return (data || []).map((row) => row.groups);
+  return (data || []).map((row) => row.groups).filter(Boolean);
 }
 
-async function renderCircleMembers(groupId) {
+function renderGroupCheckboxes(targetEventId) {
+  groupCheckboxesEl.innerHTML = '';
+  selectedGroupIds = new Set();
+
+  const groupsForEvent = groups.filter((group) => group.event_id === targetEventId);
+  if (!targetEventId) {
+    groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
+    return;
+  }
+  if (groupsForEvent.length === 0) {
+    groupCheckboxesEl.innerHTML = '<p class="group-empty">このイベントのグループがありません</p>';
+    return;
+  }
+
+  for (const group of groupsForEvent) {
+    const label = document.createElement('label');
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.value = group.id;
+    checkbox.addEventListener('change', () => {
+      if (checkbox.checked) {
+        selectedGroupIds.add(group.id);
+      } else {
+        selectedGroupIds.delete(group.id);
+      }
+      renderCircleMembers([...selectedGroupIds]);
+    });
+    label.append(checkbox, document.createTextNode(group.name));
+    groupCheckboxesEl.appendChild(label);
+  }
+}
+
+async function renderCircleMembers(groupIds) {
   circleMembersEl.innerHTML = '';
-  if (!groupId) {
+  if (!groupIds.length) {
     circleMembersEl.innerHTML = '<li class="empty">グループを選択するとメンバーが表示されます</li>';
     return;
   }
@@ -61,25 +89,32 @@ async function renderCircleMembers(groupId) {
   const { data, error } = await supabase
     .from('group_members')
     .select('profiles(display_name)')
-    .eq('group_id', groupId);
+    .in('group_id', groupIds);
 
-  if (error || !data || data.length === 0) {
+  if (error) {
+    showMessage(translateError(error), 'error');
     circleMembersEl.innerHTML = '<li class="empty">メンバーが見つかりませんでした</li>';
     return;
   }
 
-  for (const row of data) {
+  const names = [...new Set((data || []).map((row) => row.profiles?.display_name).filter(Boolean))];
+  if (names.length === 0) {
+    circleMembersEl.innerHTML = '<li class="empty">メンバーが見つかりませんでした</li>';
+    return;
+  }
+
+  for (const name of names) {
     const li = document.createElement('li');
-    li.textContent = row.profiles?.display_name ?? '(不明なユーザー)';
+    li.textContent = name;
     circleMembersEl.appendChild(li);
   }
 }
 
 // ---------- イベント・ブース ----------
 async function loadEvents() {
-  const { data, error } = await supabase.from('events').select('id, name').order('event_date', { ascending: true });
-  if (error) { showMessage(translateError(error), 'error'); return []; }
-  return data || [];
+  const result = await loadEventsWithRange(supabase);
+  if (result.error) { showMessage(translateError(result.error), 'error'); return []; }
+  return result.events.map((event) => ({ ...event, label: buildEventLabel(event) }));
 }
 
 async function loadBooths(eventId) {
@@ -117,6 +152,8 @@ function renderBoothSuggestions(booths) {
 
 eventSelect.addEventListener('change', async () => {
   const eventId = eventSelect.value;
+  renderGroupCheckboxes(eventId);
+  await renderCircleMembers([]);
   boothInput.value = '';
   boothIdInput.value = '';
   boothInput.setCustomValidity('');
@@ -132,7 +169,6 @@ eventSelect.addEventListener('change', async () => {
   renderBoothSuggestions(eventBooths);
 });
 
-groupSelect.addEventListener('change', () => renderCircleMembers(groupSelect.value));
 boothInput.addEventListener('input', syncBoothSelection);
 boothInput.addEventListener('change', syncBoothSelection);
 
@@ -146,11 +182,18 @@ function initShiftSubmit(userId) {
       showMessage('候補からブースを選んでください', 'error');
       return;
     }
+    if (selectedGroupIds.size === 0) {
+      showMessage('提出するグループを1つ以上選択してください', 'error');
+      return;
+    }
+    if (!eventSelect.value) {
+      showMessage('イベントを選択してください', 'error');
+      return;
+    }
 
-    const payload = {
+    const commonPayload = {
       user_id: userId,
-      group_id: groupSelect.value,
-      event_id: eventSelect.value || null,
+      event_id: eventSelect.value,
       booth_id: boothIdInput.value || null,
       shift_date: document.getElementById('shift-date').value,
       start_time: document.getElementById('shift-start').value,
@@ -158,11 +201,18 @@ function initShiftSubmit(userId) {
       note: document.getElementById('shift-note').value.trim() || null,
     };
 
-    const { error } = await supabase.from('shifts').insert(payload);
+    const payloads = [...selectedGroupIds].map((groupId) => ({
+      ...commonPayload,
+      group_id: groupId,
+    }));
+
+    const { error } = await supabase.from('shifts').insert(payloads);
     if (error) { showMessage(translateError(error), 'error'); return; }
 
     showMessage('シフトを提出しました', 'success');
     shiftForm.reset();
+    selectedGroupIds = new Set();
+    groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
     boothInput.disabled = true;
     boothSuggestions.innerHTML = '';
     boothIdInput.value = '';
@@ -177,12 +227,12 @@ if (user) {
   const { data: profile } = await supabase.from('profiles').select('display_name').eq('id', user.id).single();
   whoEl.textContent = `${profile?.display_name ?? user.email} でログイン中`;
 
-  const myGroups = await loadMyGroups(user.id);
-  fillSelect(groupSelect, myGroups, 'グループを選択してください');
+  groups = await loadMyGroups(user.id);
 
   const events = await loadEvents();
-  fillSelect(eventSelect, events, '選択しない');
+  fillSelect(eventSelect, events, 'イベントを選択してください');
   boothInput.disabled = true;
+  groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
 
   initShiftSubmit(user.id);
 }

@@ -8,7 +8,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
+<body class="centered-page">
   <nav class="app-nav">
     <span class="who" id="who">読み込み中...</span>
     <div class="app-nav-links">
@@ -27,25 +27,25 @@
   <!-- シフト提出 -->
   <div class="card">
     <h2 class="section-title">シフトを提出する</h2>
-    <p class="helper-text">イベントはプルダウン、ブースは入力欄の候補から選んでください。登録は「イベント」タブで行えます。</p>
+    <p class="helper-text">イベントは必須です。提出グループは複数選択できます。ブースは入力欄の候補から選んでください。</p>
 
     <form id="shift-form">
       <div class="field">
-        <label for="shift-group-select">提出するグループ</label>
-        <select id="shift-group-select" required>
-          <option value="">グループを選択してください</option>
+        <label for="shift-event-select">イベント</label>
+        <select id="shift-event-select" required>
+          <option value="">イベントを選択してください</option>
         </select>
+      </div>
+
+      <div class="field">
+        <label>提出するグループ（複数選択可）</label>
+        <div class="group-checkbox-list" id="shift-group-checkboxes">
+          <p class="group-empty">イベントを選択すると表示されます</p>
+        </div>
       </div>
 
       <ul class="member-chips" id="circle-members">
         <li class="empty">グループを選択するとメンバーが表示されます</li>
-      </ul>
-
-      <div class="field">
-        <label for="shift-event-select">イベント(任意)</label>
-        <select id="shift-event-select">
-          <option value="">選択しない</option>
-        </select>
       </div>
 
       <div class="field">
