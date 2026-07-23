@@ -10,7 +10,7 @@
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
-<body class="events-page">
+<body class="events-page centered-page">
   <nav class="app-nav">
     <span class="who" id="who">読み込み中...</span>
     <div class="app-nav-links">
@@ -28,47 +28,18 @@
 
   <div class="events-layout">
     <div class="card">
-      <h1>イベント管理</h1>
-      <p class="helper-text">イベントを作成してから、ブースと企画を登録します。シフト提出ではブース名を候補から選べます。</p>
-
-      <form id="create-event-form">
-        <div class="field">
-          <label for="event-name">イベント名</label>
-          <input type="text" id="event-name" placeholder="例: 五月祭" required>
-        </div>
-        <div class="field">
-          <label for="event-date">開催日</label>
-          <input type="date" id="event-date" required>
-        </div>
-        <button type="submit" class="primary">イベントを作成する</button>
-      </form>
-    </div>
-
-    <div class="card">
       <div class="card-header-row">
         <h2 class="section-title">登録先イベント</h2>
+        <button class="button-secondary" id="open-create-event-modal" type="button">＋ イベント追加</button>
       </div>
+      <p class="helper-text">一覧はイベント詳細ページで確認できます。</p>
       <div class="field">
         <label for="admin-event-select">イベントを選ぶ</label>
         <select id="admin-event-select">
           <option value="">イベントを選択してください</option>
         </select>
       </div>
-
-      <div class="event-summary-grid">
-        <div>
-          <h3 class="subsection-title">ブース</h3>
-          <ul class="compact-list" id="event-booth-list">
-            <li class="group-empty">イベントを選ぶと表示されます</li>
-          </ul>
-        </div>
-        <div>
-          <h3 class="subsection-title">企画</h3>
-          <ul class="compact-list" id="event-program-list">
-            <li class="group-empty">イベントを選ぶと表示されます</li>
-          </ul>
-        </div>
-      </div>
+      <a class="button-secondary" id="event-detail-link" href="event-details.html">イベント詳細を見る</a>
     </div>
 
     <div class="card">
@@ -109,18 +80,32 @@
           <label for="program-organizer">主催</label>
           <input type="text" id="program-organizer" placeholder="例: 1年有志">
         </div>
-        <div class="field-row">
-          <div class="field">
-            <label for="program-start">開始時刻</label>
-            <input type="time" id="program-start">
-          </div>
-          <div class="field">
-            <label for="program-end">終了時刻</label>
-            <input type="time" id="program-end">
-          </div>
-        </div>
         <button type="submit" class="primary">企画を登録する</button>
       </form>
+    </div>
+  </div>
+
+  <div class="modal-backdrop" id="create-event-modal" hidden>
+    <div class="modal">
+      <h2 class="section-title">イベントを追加する</h2>
+      <form id="create-event-form">
+        <div class="field">
+          <label for="event-name">イベント名</label>
+          <input type="text" id="event-name" placeholder="例: 五月祭" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="event-start-date">開始日</label>
+            <input type="date" id="event-start-date" required>
+          </div>
+          <div class="field">
+            <label for="event-end-date">終了日</label>
+            <input type="date" id="event-end-date" required>
+          </div>
+        </div>
+        <button type="submit" class="primary">イベントを作成する</button>
+      </form>
+      <button class="link-button" id="close-create-event-modal" style="width:100%; margin-top:10px;">閉じる</button>
     </div>
   </div>
 

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>イベント詳細 — Festival Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="centered-page details-page">
+  <nav class="app-nav">
+    <span class="who" id="who">読み込み中...</span>
+    <div class="app-nav-links">
+      <a href="map.html" class="nav-link">マップ</a>
+      <a href="events.html" class="nav-link is-active">イベント</a>
+      <a href="dashboard.html" class="nav-link">グループ</a>
+      <a href="shifts.html" class="nav-link">シフト</a>
+    </div>
+    <div class="app-nav-right">
+      <button class="link-button" id="logout-btn">ログアウト</button>
+    </div>
+  </nav>
+
+  <div class="message" id="event-detail-message" role="alert"></div>
+
+  <div class="card details-card">
+    <div class="card-header-row">
+      <h1 style="margin:0;">イベント詳細</h1>
+      <a class="button-secondary" href="events.html">編集ページへ戻る</a>
+    </div>
+    <div class="field">
+      <label for="detail-event-select">イベントを選ぶ</label>
+      <select id="detail-event-select">
+        <option value="">イベントを選択してください</option>
+      </select>
+    </div>
+    <div class="event-summary-grid">
+      <div>
+        <h3 class="subsection-title">ブース一覧</h3>
+        <ul class="compact-list" id="detail-booth-list">
+          <li class="group-empty">イベントを選ぶと表示されます</li>
+        </ul>
+      </div>
+      <div>
+        <h3 class="subsection-title">企画一覧</h3>
+        <ul class="compact-list" id="detail-program-list">
+          <li class="group-empty">イベントを選ぶと表示されます</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/event-details.js"></script>
+</body>
+</html>

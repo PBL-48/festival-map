@@ -60,7 +60,7 @@ async function loadBooths(eventId) {
 
 async function loadPrograms(boothIds) {
   if (boothIds.length === 0) return [];
-  const { data, error } = await supabase.from('programs').select('id, booth_id, name, organizer, start_time, end_time').in('booth_id', boothIds);
+  const { data, error } = await supabase.from('programs').select('id, booth_id, name, organizer').in('booth_id', boothIds);
   if (error) { showMessage(translateError(error), 'error'); return []; }
   return data || [];
 }
@@ -138,10 +138,7 @@ function boothTooltipHtml(booth) {
 
   html += '<div class="popup-section"><span class="label">企画</span>';
   html += boothPrograms.length
-    ? boothPrograms.map((p) => {
-        const time = p.start_time ? ` (${formatTime(p.start_time)}〜${formatTime(p.end_time)})` : '';
-        return `${escapeHtml(p.name)}${time}`;
-      }).join('<br>')
+    ? boothPrograms.map((p) => escapeHtml(p.name)).join('<br>')
     : '未登録';
   html += '</div>';
 
@@ -196,6 +193,10 @@ function initLeafletMap() {
     attribution: '&copy; OpenStreetMap contributors',
   }).addTo(leafletMap);
   markerLayer = L.layerGroup().addTo(leafletMap);
+
+  const resizeMap = () => leafletMap.invalidateSize();
+  window.addEventListener('resize', resizeMap);
+  window.addEventListener('orientationchange', resizeMap);
 }
 
 // ---------- 初期化 ----------
