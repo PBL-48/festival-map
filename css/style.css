@@ -44,10 +44,6 @@
     max-width: 380px;
   }
 
-  body.events-page .message {
-    max-width: 1120px;
-  }
-
   body.details-page .message {
     max-width: 960px;
   }
@@ -541,7 +537,7 @@
 
   .events-layout {
     width: 100%;
-    max-width: 1120px;
+    max-width: none;
     display: flex;
     flex-direction: column;
     gap: 20px;
@@ -630,7 +626,7 @@
 
   .side-pane {
     flex: 3 1 0;
-    max-width: 340px;
+    max-width: none;
     display: flex;
     flex-direction: column;
     gap: 20px;
