@@ -11,25 +11,18 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="map-page">
-  <div class="dash-header" style="max-width:1120px;">
+  <nav class="app-nav wide">
     <span class="who" id="who">読み込み中...</span>
-    <div style="display:flex; gap:8px;">
-      <a href="dashboard.html" class="link-button">グループ管理</a>
-      <a href="shifts.html" class="link-button">シフト提出</a>
+    <div class="app-nav-links">
+      <a href="map.html" class="nav-link is-active">マップ</a>
+      <a href="dashboard.html" class="nav-link">グループ</a>
+      <a href="shifts.html" class="nav-link">シフト</a>
+    </div>
+    <div class="app-nav-right">
+      <select id="event-select" class="nav-event-select" hidden></select>
       <button class="link-button" id="logout-btn">ログアウト</button>
     </div>
-  </div>
-
-  <nav class="top-nav" style="max-width:1120px;">
-    <a href="map.html" class="nav-link is-active">マップ</a>
-    <a href="dashboard.html" class="nav-link">グループ</a>
-    <a href="shifts.html" class="nav-link">シフト</a>
   </nav>
-
-  <div class="field" style="max-width:1120px; width:100%;" id="event-select-wrap" hidden>
-    <label for="event-select">表示するイベント</label>
-    <select id="event-select"></select>
-  </div>
 
   <div class="message" id="map-message" role="alert" style="max-width:1120px; width:100%;"></div>
 
@@ -42,14 +35,20 @@
 
     <div class="side-pane">
       <div class="card" style="max-width:none;">
-        <h2 class="section-title">表示するグループ</h2>
+        <div class="card-header-row">
+          <h2 class="section-title">表示するグループ</h2>
+          <a href="dashboard.html" class="button-secondary">＋ 参加・作成</a>
+        </div>
         <div class="group-checkbox-list" id="group-checkboxes">
           <p class="group-empty">グループに参加すると表示されます</p>
         </div>
       </div>
 
       <div class="card" style="max-width:none;">
-        <h2 class="section-title">現在シフト中</h2>
+        <div class="card-header-row">
+          <h2 class="section-title">現在シフト中</h2>
+          <a href="shifts.html" class="button-secondary">＋ シフト提出</a>
+        </div>
         <div id="onshift-list">
           <p class="group-empty">読み込み中...</p>
         </div>

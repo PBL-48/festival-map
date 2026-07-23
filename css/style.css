@@ -184,17 +184,52 @@
     .tab, button.primary { transition: none; }
   }
 
-  /* ダッシュボード用の簡易レイアウト */
-  .dash-header {
+  /* 統一ナビゲーションバー */
+  .app-nav {
     width: 100%;
     max-width: 480px;
     display: flex;
-    justify-content: space-between;
+    flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
+    gap: 10px 16px;
+    padding: 10px 18px;
     margin-bottom: 20px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 999px;
+  }
+  .app-nav.wide { max-width: 1120px; }
+  .app-nav .who {
+    font-size: 13px;
+    color: var(--color-ink-soft);
+    white-space: nowrap;
+  }
+  .app-nav-links {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .app-nav-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .nav-event-select {
+    font-size: 13px;
+    padding: 6px 10px;
+    border-radius: 999px;
+    width: auto;
   }
 
-  .dash-header .who {
+  @media (max-width: 640px) {
+    .app-nav { border-radius: 16px; justify-content: center; text-align: center; }
+    .app-nav .who { width: 100%; text-align: center; }
+    .app-nav-links, .app-nav-right { justify-content: center; width: 100%; }
+  }
+
+  .who {
     font-size: 14px;
     color: var(--color-ink-soft);
   }
@@ -208,6 +243,8 @@
     padding: 8px 14px;
     border-radius: 999px;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-block;
   }
   .link-button:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
@@ -217,6 +254,15 @@
     font-size: 18px;
     margin: 0 0 16px;
   }
+
+  .card-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .card-header-row .section-title { margin: 0; }
 
   .group-list {
     list-style: none;
@@ -267,6 +313,8 @@
     border-radius: 8px;
     cursor: pointer;
     white-space: nowrap;
+    text-decoration: none;
+    display: inline-block;
   }
   .button-secondary:hover { border-color: var(--color-accent); color: var(--color-accent); }
 
@@ -446,7 +494,7 @@
   }
 
   .map-pane {
-    flex: 2;
+    flex: 7 1 0;
     position: relative;
     min-width: 0;
   }
@@ -488,8 +536,8 @@
   .map-hint[hidden] { display: none; }
 
   .side-pane {
-    flex: 1;
-    max-width: 320px;
+    flex: 3 1 0;
+    max-width: 340px;
     display: flex;
     flex-direction: column;
     gap: 20px;

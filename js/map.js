@@ -4,7 +4,6 @@ import { requireAuth } from './sessionGuard.js';
 const whoEl = document.getElementById('who');
 const logoutBtn = document.getElementById('logout-btn');
 const messageEl = document.getElementById('map-message');
-const eventSelectWrap = document.getElementById('event-select-wrap');
 const eventSelect = document.getElementById('event-select');
 const groupCheckboxesEl = document.getElementById('group-checkboxes');
 const onshiftListEl = document.getElementById('onshift-list');
@@ -274,7 +273,7 @@ if (currentUser) {
     showMessage('まだどのグループにも参加していません。先に「グループ」からグループの作成・参加を行ってください。', 'error');
   } else {
     if (eventList.length > 1) {
-      eventSelectWrap.hidden = false;
+      eventSelect.hidden = false;
       eventSelect.innerHTML = eventList.map((ev) => `<option value="${ev.id}">${escapeHtml(ev.name)}</option>`).join('');
       eventSelect.addEventListener('change', () => loadEventData(eventSelect.value));
     }

@@ -9,14 +9,16 @@
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-  <div class="dash-header">
+  <nav class="app-nav">
     <span class="who" id="who">読み込み中...</span>
-    <button class="link-button" id="logout-btn">ログアウト</button>
-  </div>
-
-  <nav class="top-nav">
-    <a href="dashboard.html" class="nav-link">グループ</a>
-    <a href="shifts.html" class="nav-link is-active">シフト</a>
+    <div class="app-nav-links">
+      <a href="map.html" class="nav-link">マップ</a>
+      <a href="dashboard.html" class="nav-link">グループ</a>
+      <a href="shifts.html" class="nav-link is-active">シフト</a>
+    </div>
+    <div class="app-nav-right">
+      <button class="link-button" id="logout-btn">ログアウト</button>
+    </div>
   </nav>
 
   <div class="message" id="shift-message" role="alert"></div>
