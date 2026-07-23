@@ -7,12 +7,6 @@ const messageEl = document.getElementById('map-message');
 const eventSelect = document.getElementById('event-select');
 const groupCheckboxesEl = document.getElementById('group-checkboxes');
 const onshiftListEl = document.getElementById('onshift-list');
-const addBoothBtn = document.getElementById('add-booth-btn');
-const placeHint = document.getElementById('place-hint');
-const boothNameModal = document.getElementById('booth-name-modal');
-const newBoothNameInput = document.getElementById('new-booth-name-input');
-const confirmBoothBtn = document.getElementById('confirm-booth-btn');
-const cancelBoothBtn = document.getElementById('cancel-booth-btn');
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -39,8 +33,6 @@ let programs = [];
 let shifts = [];
 let leafletMap = null;
 let markerLayer = null;
-let placingMode = false;
-let pendingLatLng = null;
 
 // ---------- データ取得 ----------
 async function loadUserGroups(userId) {
@@ -176,53 +168,6 @@ function renderMarkers() {
   }
 }
 
-// ---------- ブース追加(地図クリックで配置) ----------
-function initBoothAdding() {
-  addBoothBtn.addEventListener('click', () => {
-    placingMode = !placingMode;
-    addBoothBtn.classList.toggle('is-active', placingMode);
-    addBoothBtn.textContent = placingMode ? 'クリックして配置' : '＋ブースを追加';
-    placeHint.hidden = !placingMode;
-  });
-
-  leafletMap.on('click', (e) => {
-    if (!placingMode) return;
-    pendingLatLng = e.latlng;
-    boothNameModal.hidden = false;
-    newBoothNameInput.value = '';
-    newBoothNameInput.focus();
-  });
-
-  cancelBoothBtn.addEventListener('click', () => {
-    boothNameModal.hidden = true;
-    pendingLatLng = null;
-  });
-
-  confirmBoothBtn.addEventListener('click', async () => {
-    const name = newBoothNameInput.value.trim();
-    if (!name || !pendingLatLng || !currentEventId) return;
-
-    const { data, error } = await supabase
-      .from('booths')
-      .insert({ name, event_id: currentEventId, lat: pendingLatLng.lat, lng: pendingLatLng.lng })
-      .select('id, name, lat, lng')
-      .single();
-
-    if (error) { showMessage(translateError(error), 'error'); return; }
-
-    booths.push(data);
-    renderMarkers();
-    boothNameModal.hidden = true;
-    pendingLatLng = null;
-
-    // 追加モードは1回で終える(連続で置きたい場合は再度ボタンを押してもらう)
-    placingMode = false;
-    addBoothBtn.classList.remove('is-active');
-    addBoothBtn.textContent = '＋ブースを追加';
-    placeHint.hidden = true;
-  });
-}
-
 // ---------- イベント切り替え時のデータ読み込み ----------
 async function refreshShiftsAndPanels() {
   shifts = await loadShifts([...selectedGroupIds]);
@@ -267,7 +212,6 @@ if (currentUser) {
   const eventList = [...eventMap.entries()].map(([id, name]) => ({ id, name }));
 
   initLeafletMap();
-  initBoothAdding();
 
   if (eventList.length === 0) {
     showMessage('まだどのグループにも参加していません。先に「グループ」からグループの作成・参加を行ってください。', 'error');

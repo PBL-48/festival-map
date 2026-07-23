@@ -9,20 +9,11 @@ const shiftForm = document.getElementById('shift-form');
 const groupSelect = document.getElementById('shift-group-select');
 const circleMembersEl = document.getElementById('circle-members');
 const eventSelect = document.getElementById('shift-event-select');
-const boothSelect = document.getElementById('shift-booth-select');
+const boothInput = document.getElementById('shift-booth-input');
+const boothIdInput = document.getElementById('shift-booth-id');
+const boothSuggestions = document.getElementById('shift-booth-suggestions');
 
-const toggleNewEvent = document.getElementById('toggle-new-event');
-const newEventBox = document.getElementById('new-event-box');
-const newEventName = document.getElementById('new-event-name');
-const addEventBtn = document.getElementById('add-event-btn');
-
-const toggleNewBooth = document.getElementById('toggle-new-booth');
-const newBoothBox = document.getElementById('new-booth-box');
-const newBoothName = document.getElementById('new-booth-name');
-const addBoothBtn = document.getElementById('add-booth-btn');
-
-const viewGroupSelect = document.getElementById('view-group-select');
-const shiftListEl = document.getElementById('shift-list');
+let eventBooths = [];
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -97,82 +88,70 @@ async function loadBooths(eventId) {
   return data || [];
 }
 
-toggleNewEvent.addEventListener('click', () => { newEventBox.hidden = !newEventBox.hidden; });
-toggleNewBooth.addEventListener('click', () => { newBoothBox.hidden = !newBoothBox.hidden; });
-
-addEventBtn.addEventListener('click', async () => {
-  const name = newEventName.value.trim();
-  if (!name) return;
-
-  const { data, error } = await supabase.from('events').insert({ name }).select('id, name').single();
-  if (error) { showMessage(translateError(error), 'error'); return; }
-
-  const opt = document.createElement('option');
-  opt.value = data.id;
-  opt.textContent = data.name;
-  eventSelect.appendChild(opt);
-  eventSelect.value = data.id;
-  eventSelect.dispatchEvent(new Event('change'));
-
-  newEventName.value = '';
-  newEventBox.hidden = true;
-});
-
-addBoothBtn.addEventListener('click', async () => {
-  const name = newBoothName.value.trim();
-  const eventId = eventSelect.value;
-  if (!name || !eventId) return;
-
-  const { data, error } = await supabase
-    .from('booths')
-    .insert({ name, event_id: eventId })
-    .select('id, name')
-    .single();
-  if (error) { showMessage(translateError(error), 'error'); return; }
-
-  const opt = document.createElement('option');
-  opt.value = data.id;
-  opt.textContent = data.name;
-  boothSelect.appendChild(opt);
-  boothSelect.value = data.id;
-
-  newBoothName.value = '';
-  newBoothBox.hidden = true;
-});
-
-eventSelect.addEventListener('change', async () => {
-  const eventId = eventSelect.value;
-  boothSelect.innerHTML = '<option value="">選択しない</option>';
-
-  if (!eventId) {
-    boothSelect.disabled = true;
-    toggleNewBooth.disabled = true;
+function syncBoothSelection() {
+  const value = boothInput.value.trim();
+  if (!value) {
+    boothIdInput.value = '';
+    boothInput.setCustomValidity('');
     return;
   }
 
-  boothSelect.disabled = false;
-  toggleNewBooth.disabled = false;
-  const booths = await loadBooths(eventId);
+  const matchedBooth = eventBooths.find((booth) => booth.name.toLowerCase() === value.toLowerCase());
+  if (matchedBooth) {
+    boothIdInput.value = matchedBooth.id;
+    boothInput.setCustomValidity('');
+  } else {
+    boothIdInput.value = '';
+    boothInput.setCustomValidity('候補からブースを選んでください');
+  }
+}
+
+function renderBoothSuggestions(booths) {
+  boothSuggestions.innerHTML = '';
   for (const booth of booths) {
     const opt = document.createElement('option');
-    opt.value = booth.id;
-    opt.textContent = booth.name;
-    boothSelect.appendChild(opt);
+    opt.value = booth.name;
+    boothSuggestions.appendChild(opt);
   }
+}
+
+eventSelect.addEventListener('change', async () => {
+  const eventId = eventSelect.value;
+  boothInput.value = '';
+  boothIdInput.value = '';
+  boothInput.setCustomValidity('');
+  boothSuggestions.innerHTML = '';
+
+  if (!eventId) {
+    boothInput.disabled = true;
+    return;
+  }
+
+  boothInput.disabled = false;
+  eventBooths = await loadBooths(eventId);
+  renderBoothSuggestions(eventBooths);
 });
 
 groupSelect.addEventListener('change', () => renderCircleMembers(groupSelect.value));
+boothInput.addEventListener('input', syncBoothSelection);
+boothInput.addEventListener('change', syncBoothSelection);
 
 // ---------- シフト提出 ----------
 function initShiftSubmit(userId) {
   shiftForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
+    syncBoothSelection();
+    if (boothInput.value.trim() && !boothIdInput.value) {
+      showMessage('候補からブースを選んでください', 'error');
+      return;
+    }
+
     const payload = {
       user_id: userId,
       group_id: groupSelect.value,
       event_id: eventSelect.value || null,
-      booth_id: boothSelect.value || null,
+      booth_id: boothIdInput.value || null,
       shift_date: document.getElementById('shift-date').value,
       start_time: document.getElementById('shift-start').value,
       end_time: document.getElementById('shift-end').value,
@@ -184,55 +163,12 @@ function initShiftSubmit(userId) {
 
     showMessage('シフトを提出しました', 'success');
     shiftForm.reset();
-    boothSelect.disabled = true;
-    toggleNewBooth.disabled = true;
+    boothInput.disabled = true;
+    boothSuggestions.innerHTML = '';
+    boothIdInput.value = '';
+    boothInput.setCustomValidity('');
     circleMembersEl.innerHTML = '<li class="empty">グループを選択するとメンバーが表示されます</li>';
-    await loadShiftList(userId);
   });
-}
-
-// ---------- シフト閲覧 ----------
-function formatTime(t) { return t ? t.slice(0, 5) : ''; }
-
-async function loadShiftList(userId) {
-  shiftListEl.innerHTML = '<li class="group-empty">読み込み中...</li>';
-
-  let query = supabase
-    .from('shifts')
-    .select('id, shift_date, start_time, end_time, note, profiles(display_name), groups(name), events(name), booths(name)')
-    .order('shift_date', { ascending: true })
-    .order('start_time', { ascending: true });
-
-  const selectedGroup = viewGroupSelect.value;
-  if (selectedGroup && selectedGroup !== 'all') {
-    query = query.eq('group_id', selectedGroup);
-  }
-
-  const { data, error } = await query;
-  if (error) { showMessage(translateError(error), 'error'); return; }
-
-  shiftListEl.innerHTML = '';
-  if (!data || data.length === 0) {
-    shiftListEl.innerHTML = '<li class="group-empty">まだシフトがありません</li>';
-    return;
-  }
-
-  for (const s of data) {
-    const li = document.createElement('li');
-    li.className = 'shift-item';
-
-    const metaParts = [s.groups?.name, s.events?.name, s.booths?.name].filter(Boolean).map(escapeHtml);
-
-    li.innerHTML = `
-      <div class="top-row">
-        <span class="time">${escapeHtml(s.shift_date)} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}</span>
-        <span class="who-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
-      </div>
-      <div class="meta">${metaParts.join(' / ')}</div>
-      ${s.note ? `<div class="note">${escapeHtml(s.note)}</div>` : ''}
-    `;
-    shiftListEl.appendChild(li);
-  }
 }
 
 // ---------- 初期化 ----------
@@ -244,20 +180,11 @@ if (user) {
   const myGroups = await loadMyGroups(user.id);
   fillSelect(groupSelect, myGroups, 'グループを選択してください');
 
-  viewGroupSelect.innerHTML = '<option value="all">すべてのグループ</option>';
-  for (const g of myGroups) {
-    const opt = document.createElement('option');
-    opt.value = g.id;
-    opt.textContent = g.name;
-    viewGroupSelect.appendChild(opt);
-  }
-
   const events = await loadEvents();
   fillSelect(eventSelect, events, '選択しない');
+  boothInput.disabled = true;
 
   initShiftSubmit(user.id);
-  viewGroupSelect.addEventListener('change', () => loadShiftList(user.id));
-  await loadShiftList(user.id);
 }
 
 logoutBtn.addEventListener('click', async () => {

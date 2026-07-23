@@ -13,6 +13,7 @@
     <span class="who" id="who">読み込み中...</span>
     <div class="app-nav-links">
       <a href="map.html" class="nav-link">マップ</a>
+      <a href="events.html" class="nav-link">イベント</a>
       <a href="dashboard.html" class="nav-link">グループ</a>
       <a href="shifts.html" class="nav-link is-active">シフト</a>
     </div>
@@ -26,6 +27,7 @@
   <!-- シフト提出 -->
   <div class="card">
     <h2 class="section-title">シフトを提出する</h2>
+    <p class="helper-text">イベントはプルダウン、ブースは入力欄の候補から選んでください。登録は「イベント」タブで行えます。</p>
 
     <form id="shift-form">
       <div class="field">
@@ -45,22 +47,12 @@
           <option value="">選択しない</option>
         </select>
       </div>
-      <button type="button" class="quick-add-toggle" id="toggle-new-event">+ 新しいイベントを追加</button>
-      <div class="quick-add-box" id="new-event-box" hidden>
-        <input type="text" id="new-event-name" placeholder="イベント名(例: 五月祭)">
-        <button type="button" class="button-secondary" id="add-event-btn">追加</button>
-      </div>
 
       <div class="field">
-        <label for="shift-booth-select">ブース(任意・イベント選択後に選べます)</label>
-        <select id="shift-booth-select" disabled>
-          <option value="">選択しない</option>
-        </select>
-      </div>
-      <button type="button" class="quick-add-toggle" id="toggle-new-booth" disabled>+ 新しいブースを追加</button>
-      <div class="quick-add-box" id="new-booth-box" hidden>
-        <input type="text" id="new-booth-name" placeholder="ブース名(例: たこ焼き店)">
-        <button type="button" class="button-secondary" id="add-booth-btn">追加</button>
+        <label for="shift-booth-input">ブース(任意・候補から選択)</label>
+        <input type="text" id="shift-booth-input" list="shift-booth-suggestions" placeholder="ブース名を入力してください" disabled>
+        <input type="hidden" id="shift-booth-id">
+        <datalist id="shift-booth-suggestions"></datalist>
       </div>
 
       <div class="field">
@@ -86,22 +78,6 @@
 
       <button type="submit" class="primary">シフトを提出する</button>
     </form>
-  </div>
-
-  <!-- シフト閲覧 -->
-  <div class="card">
-    <h2 class="section-title">みんなのシフト</h2>
-
-    <div class="field">
-      <label for="view-group-select">表示するグループ</label>
-      <select id="view-group-select">
-        <option value="all">すべてのグループ</option>
-      </select>
-    </div>
-
-    <ul class="shift-list" id="shift-list">
-      <li class="group-empty">読み込み中...</li>
-    </ul>
   </div>
 
   <script type="module" src="js/shifts.js"></script>
