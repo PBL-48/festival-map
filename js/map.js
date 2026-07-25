@@ -166,22 +166,19 @@ function renderMarkers() {
     markerLayer.clearLayers();
     for (const booth of booths) {
       const marker = L.marker([booth.lat, booth.lng], { icon: boothIcon });
-      marker.bindTooltip(() => boothTooltipHtml(booth), {
-        sticky: true,
-        direction: 'top',
+      marker.bindPopup(() => boothTooltipHtml(booth), {
         className: 'booth-tooltip',
-        offset: [0, -8],
+        maxWidth: 260,
+        autoPan: true,
       });
       marker.addTo(markerLayer);
     }
-    // ...bounds系の処理はそのまま
 
-  if (booths.length > 0) {
-    const bounds = L.latLngBounds(booths.map((b) => [b.lat, b.lng]));
-    leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
+    if (booths.length > 0) {
+      const bounds = L.latLngBounds(booths.map((b) => [b.lat, b.lng]));
+      leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
+    }
   }
-}
-
 // ---------- イベント切り替え時のデータ読み込み ----------
 async function refreshShiftsAndPanels() {
   shifts = await loadShifts([...selectedGroupIds]);
