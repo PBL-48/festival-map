@@ -595,13 +595,34 @@
     align-items: flex-start;
     margin: 0;
   }
-
   .map-pane {
     flex: 7 1 0;
+    min-width: 0;      /* 追加 */
     position: relative;
-    min-width: 0;
   }
 
+  .side-pane {
+    flex: 3 1 0;
+    min-width: 0;      /* 追加 */
+    max-width: none;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  @media (max-width: 760px) {
+    .map-layout { flex-direction: column; }
+    .map-pane, .side-pane {
+      flex: none;       /* 1 1 auto ではなくこちらに変更 */
+      width: 100%;
+      min-width: 0;
+    }
+    .side-pane { max-width: none; }
+    #leaflet-map {
+      height: 60vh;
+      min-height: 280px;
+    }
+  }
   #leaflet-map {
     width: 100%;
     height: clamp(320px, 72vh, 900px);
@@ -623,14 +644,6 @@
     z-index: 500;
   }
   .map-hint[hidden] { display: none; }
-
-  .side-pane {
-    flex: 3 1 0;
-    max-width: none;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
 
   .group-checkbox-list {
     display: flex;
@@ -677,15 +690,6 @@
     margin-bottom: 2px;
   }
 
-  @media (max-width: 760px) {
-    .map-layout { flex-direction: column; }
-    .map-pane, .side-pane { flex: 1 1 auto; }   /* 追加: 縦並び時の高さの奪い合いを防止 */
-    .side-pane { max-width: none; width: 100%; }
-    #leaflet-map {
-      height: 60vh;         /* svhをvhに変更 */
-      min-height: 280px;
-    }
-  }
   /* カスタムピン */
 .booth-pin svg {
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
