@@ -150,14 +150,31 @@ function boothTooltipHtml(booth) {
 
   return html;
 }
+// マーカーアイコンを一度だけ定義(renderMarkers関数の外、モジュールの上のほうに置く)
+const boothIcon = L.divIcon({
+  className: 'booth-pin',
+  html: `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+    <path style="fill:var(--color-accent)" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"/>
+    <circle cx="12" cy="12" r="5" fill="#fff"/>
+  </svg>`,
+  iconSize: [28, 38],
+  iconAnchor: [14, 38],
+  tooltipAnchor: [0, -32],
+});
 
 function renderMarkers() {
-  markerLayer.clearLayers();
-  for (const booth of booths) {
-    const marker = L.marker([booth.lat, booth.lng]);
-    marker.bindTooltip(() => boothTooltipHtml(booth), { sticky: true, direction: 'top' });
-    marker.addTo(markerLayer);
-  }
+    markerLayer.clearLayers();
+    for (const booth of booths) {
+      const marker = L.marker([booth.lat, booth.lng], { icon: boothIcon });
+      marker.bindTooltip(() => boothTooltipHtml(booth), {
+        sticky: true,
+        direction: 'top',
+        className: 'booth-tooltip',
+        offset: [0, -8],
+      });
+      marker.addTo(markerLayer);
+    }
+    // ...bounds系の処理はそのまま
 
   if (booths.length > 0) {
     const bounds = L.latLngBounds(booths.map((b) => [b.lat, b.lng]));

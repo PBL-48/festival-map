@@ -213,7 +213,7 @@
     align-items: center;
     justify-content: space-between;
     gap: 10px 16px;
-    padding: 14px 18px;
+    padding: 12px 18px;
     margin: 0 0 20px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
@@ -685,3 +685,57 @@
       min-height: 300px;
     }
   }
+  /* カスタムピン */
+.booth-pin svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  transition: transform 0.15s ease;
+}
+.leaflet-marker-icon:hover svg { transform: scale(1.15) translateY(-2px); }
+
+/* ツールチップの見た目をサイト全体のトーンに合わせる */
+.leaflet-tooltip.booth-tooltip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  max-width: 240px;
+  white-space: normal;
+  opacity: 1;
+}
+.leaflet-tooltip.booth-tooltip::before {
+  border-top-color: var(--color-surface);
+}
+.field-list-wrap { margin-top: 24px; }
+.subsection-title {
+  font-family: var(--font-display);
+  font-size: 15px;
+  margin: 0 0 12px;
+}
+.item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.item-edit-row { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
+.item-edit-row input { flex: 1; min-width: 100px; }
+.group-item { flex-wrap: wrap; }
+
+/* ピンとツールチップ(map.htmlと共通のスタイル) */
+.booth-pin svg {
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
+  transition: transform 0.15s ease;
+}
+.leaflet-marker-icon:hover svg { transform: scale(1.15) translateY(-2px); }
+
+.leaflet-tooltip.booth-tooltip {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  padding: 10px 12px;
+  font-family: var(--font-body);
+  max-width: 240px;
+  white-space: normal;
+  opacity: 1;
+}
+.leaflet-tooltip.booth-tooltip::before {
+  border-top-color: var(--color-surface);
+}
