@@ -204,17 +204,20 @@ async function loadEventData(eventId) {
 }
 
 function initLeafletMap() {
-  leafletMap = L.map('leaflet-map').setView([35.6812, 139.7671], 16); // 初期値: 東京駅付近。ブースがあれば自動でフィットする
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '&copy; OpenStreetMap contributors',
-  }).addTo(leafletMap);
-  markerLayer = L.layerGroup().addTo(leafletMap);
+    leafletMap = L.map('leaflet-map').setView([35.6812, 139.7671], 16);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors',
+    }).addTo(leafletMap);
+    markerLayer = L.layerGroup().addTo(leafletMap);
 
-  const resizeMap = () => leafletMap.invalidateSize();
-  window.addEventListener('resize', resizeMap);
-  window.addEventListener('orientationchange', resizeMap);
-}
+    const resizeMap = () => leafletMap.invalidateSize();
+    window.addEventListener('resize', resizeMap);
+    window.addEventListener('orientationchange', resizeMap);
+
+    // 追加: 初回描画時、レイアウト確定前にサイズを取得してしまうケースの補正
+    requestAnimationFrame(() => setTimeout(resizeMap, 50));
+  }
 
 // ---------- 初期化 ----------
 currentUser = await requireAuth();

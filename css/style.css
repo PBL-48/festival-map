@@ -679,10 +679,11 @@
 
   @media (max-width: 760px) {
     .map-layout { flex-direction: column; }
+    .map-pane, .side-pane { flex: 1 1 auto; }   /* 追加: 縦並び時の高さの奪い合いを防止 */
     .side-pane { max-width: none; width: 100%; }
     #leaflet-map {
-      height: clamp(300px, 56svh, 540px);
-      min-height: 300px;
+      height: 60vh;         /* svhをvhに変更 */
+      min-height: 280px;
     }
   }
   /* カスタムピン */
@@ -726,16 +727,20 @@
 .leaflet-marker-icon:hover svg { transform: scale(1.15) translateY(-2px); }
 
 .leaflet-tooltip.booth-tooltip {
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: 10px;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
-  padding: 10px 12px;
-  font-family: var(--font-body);
-  max-width: 240px;
-  white-space: normal;
-  opacity: 1;
-}
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+    padding: 10px 12px;
+    font-family: var(--font-body);
+    max-width: 280px;      /* 240px から拡大 */
+    max-height: 220px;     /* 追加: これ以上は伸ばさない */
+    overflow-y: auto;      /* 追加: はみ出た分はスクロール */
+    white-space: normal;
+    opacity: 1;
+  }
+
+.booth-popup { line-height: 1.45; } /* 追加: 行間を少し詰めて縦の圧迫感を減らす */
 .leaflet-tooltip.booth-tooltip::before {
   border-top-color: var(--color-surface);
 }
