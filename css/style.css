@@ -727,20 +727,20 @@
 .leaflet-marker-icon:hover svg { transform: scale(1.15) translateY(-2px); }
 
 .leaflet-tooltip.booth-tooltip {
+    width: 260px !important;
+    max-width: 260px !important;
+    max-height: 220px;
+    overflow-y: auto;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-radius: 10px;
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
     padding: 10px 12px;
     font-family: var(--font-body);
-    max-width: 280px;      /* 240px から拡大 */
-    max-height: 220px;     /* 追加: これ以上は伸ばさない */
-    overflow-y: auto;      /* 追加: はみ出た分はスクロール */
-    white-space: normal;
+    white-space: normal !important;
     opacity: 1;
   }
-
-.booth-popup { line-height: 1.45; } /* 追加: 行間を少し詰めて縦の圧迫感を減らす */
-.leaflet-tooltip.booth-tooltip::before {
-  border-top-color: var(--color-surface);
-}
+  .leaflet-tooltip.booth-tooltip::before {
+    border-top-color: var(--color-surface);
+  }
+  .booth-popup { line-height: 1.45; }
