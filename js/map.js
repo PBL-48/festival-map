@@ -104,12 +104,7 @@ function renderOnShiftPanel() {
   const todayStr = now.toISOString().slice(0, 10);
   const nowTime = now.toTimeString().slice(0, 5);
 
-  const active = shifts.filter((s) =>
-    s.shift_date === todayStr &&
-    selectedGroupIds.has(s.group_id) &&
-    s.start_time?.slice(0, 5) <= nowTime &&
-    nowTime <= s.end_time?.slice(0, 5)
-  );
+  const active = shifts.filter((s) => selectedGroupIds.has(s.group_id) && isShiftActiveNow(s));
 
   onshiftListEl.innerHTML = '';
   if (active.length === 0) {
@@ -144,28 +139,54 @@ function boothTooltipHtml(booth) {
 
   html += '<div class="popup-section"><span class="label">シフト</span>';
   html += boothShifts.length
-    ? boothShifts.map((s) => `${escapeHtml(s.profiles?.display_name ?? '')} ${escapeHtml(s.shift_date)} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`).join('<br>')
-    : 'なし';
+  ?   boothShifts.map((s) => {
+      const line = `${escapeHtml(s.profiles?.display_name ?? '')} ${escapeHtml(s.shift_date)} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`;
+      return isShiftActiveNow(s) ? `<span class="shift-active-now">● ${line}</span>` : `<span class="shift-inactive-now">${line}</span>`;
+    }).join('<br>')
+  : 'なし';
   html += '</div></div>';
 
   return html;
 }
 // マーカーアイコンを一度だけ定義(renderMarkers関数の外、モジュールの上のほうに置く)
-const boothIcon = L.divIcon({
-  className: 'booth-pin',
-  html: `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
-    <path style="fill:var(--color-accent)" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"/>
-    <circle cx="12" cy="12" r="5" fill="#fff"/>
-  </svg>`,
-  iconSize: [28, 38],
-  iconAnchor: [14, 38],
-  tooltipAnchor: [0, -32],
-});
+const boothIconActive = L.divIcon({
+    className: 'booth-pin booth-pin-active',
+    html: `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+      <path style="fill:var(--color-error)" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"/>
+      <circle cx="12" cy="12" r="5" fill="#fff"/>
+    </svg>`,
+    iconSize: [28, 38],
+    iconAnchor: [14, 38],
+    tooltipAnchor: [0, -32],
+  });
 
+  const boothIconInactive = L.divIcon({
+    className: 'booth-pin booth-pin-inactive',
+    html: `<svg viewBox="0 0 24 32" xmlns="http://www.w3.org/2000/svg">
+      <path style="fill:#B7AF9E" d="M12 0C5.4 0 0 5.4 0 12c0 9 12 20 12 20s12-11 12-20C24 5.4 18.6 0 12 0z"/>
+      <circle cx="12" cy="12" r="5" fill="#fff"/>
+    </svg>`,
+    iconSize: [28, 38],
+    iconAnchor: [14, 38],
+    tooltipAnchor: [0, -32],
+  });
+function isShiftActiveNow(shift) {
+const now = new Date();
+const todayStr = now.toISOString().slice(0, 10);
+const nowTime = now.toTimeString().slice(0, 5);
+return shift.shift_date === todayStr &&
+    shift.start_time?.slice(0, 5) <= nowTime &&
+    nowTime <= shift.end_time?.slice(0, 5);
+}
+
+function isBoothActiveNow(boothId) {
+return shifts.some((s) => s.booth_id === boothId && selectedGroupIds.has(s.group_id) && isShiftActiveNow(s));
+}
 function renderMarkers() {
     markerLayer.clearLayers();
     for (const booth of booths) {
-      const marker = L.marker([booth.lat, booth.lng], { icon: boothIcon });
+      const icon = isBoothActiveNow(booth.id) ? boothIconActive : boothIconInactive;
+      const marker = L.marker([booth.lat, booth.lng], { icon });
       marker.bindPopup(() => boothTooltipHtml(booth), {
         className: 'booth-tooltip',
         maxWidth: 260,
@@ -173,12 +194,15 @@ function renderMarkers() {
       });
       marker.addTo(markerLayer);
     }
-
     if (booths.length > 0) {
       const bounds = L.latLngBounds(booths.map((b) => [b.lat, b.lng]));
       leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
     }
-  }
+}
+setInterval(() => {
+    renderOnShiftPanel();
+    renderMarkers();
+  }, 60000); // 1分ごとに再判定
 // ---------- イベント切り替え時のデータ読み込み ----------
 async function refreshShiftsAndPanels() {
   shifts = await loadShifts([...selectedGroupIds]);

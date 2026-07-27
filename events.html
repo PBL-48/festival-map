@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="events-page centered-page">
   <nav class="app-nav wide">
@@ -29,70 +27,20 @@
   <div class="events-layout">
     <div class="card">
       <div class="card-header-row">
-        <h2 class="section-title">登録先イベント</h2>
+        <h2 class="section-title">イベントの選択</h2>
         <button class="button-secondary" id="open-create-event-modal" type="button">＋ イベント追加</button>
       </div>
-      <p class="helper-text">一覧はイベント詳細ページで確認できます。</p>
+      <p class="helper-text">ブース・企画の登録は、イベントを選んだ上でそれぞれの管理ページから行えます。</p>
       <div class="field">
         <label for="admin-event-select">イベントを選ぶ</label>
         <select id="admin-event-select">
           <option value="">イベントを選択してください</option>
         </select>
       </div>
-      <a class="button-secondary" id="event-detail-link" href="event-details.html">イベント詳細を見る</a>
-    </div>
-
-    <div class="card">
-      <div class="card-header-row">
-        <h2 class="section-title">ブースを追加する</h2>
-        <span class="badge">地図をクリック</span>
-      </div>
-
-      <form id="create-booth-form">
-        <div class="field">
-          <label for="booth-name">ブース名</label>
-          <input type="text" id="booth-name" placeholder="例: たこ焼き店" required>
-        </div>
-        <div class="event-map-shell">
-          <div id="event-booth-map"></div>
-          <p class="map-hint static" id="booth-map-hint">地図をクリックしてブースの位置を決めてください</p>
-        </div>
-        <p class="helper-text" id="booth-coords">座標未設定</p>
-        <button type="submit" class="primary">ブースを登録する</button>
-      </form>
-      <div class="field-list-wrap">
-        <h3 class="subsection-title">登録済みのブース</h3>
-        <ul class="group-list" id="booth-list">
-          <li class="group-empty">まだブースがありません</li>
-        </ul>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2 class="section-title">企画を登録する</h2>
-
-      <form id="create-program-form">
-        <div class="field">
-          <label for="program-booth-select">ブース</label>
-          <select id="program-booth-select" required>
-            <option value="">イベントを選択してください</option>
-          </select>
-        </div>
-        <div class="field">
-          <label for="program-name">企画名</label>
-          <input type="text" id="program-name" placeholder="例: ライブステージ" required>
-        </div>
-        <div class="field">
-          <label for="program-organizer">主催</label>
-          <input type="text" id="program-organizer" placeholder="例: 1年有志">
-        </div>
-        <button type="submit" class="primary">企画を登録する</button>
-      </form>
-      <div class="field-list-wrap">
-        <h3 class="subsection-title">登録済みの企画</h3>
-        <ul class="group-list" id="program-list">
-          <li class="group-empty">まだ企画がありません</li>
-        </ul>
+      <div class="item-actions">
+        <a class="button-secondary" id="event-detail-link" href="event-details.html">イベント詳細を見る</a>
+        <a class="button-secondary" id="booth-manage-link" href="booths.html">ブースを管理</a>
+        <a class="button-secondary" id="program-manage-link" href="programs.html">企画を管理</a>
       </div>
     </div>
   </div>

@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>企画管理 — Festival Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="events-page centered-page">
+  <nav class="app-nav wide">
+    <span class="who" id="who">読み込み中...</span>
+    <div class="app-nav-links">
+      <a href="map.html" class="nav-link">マップ</a>
+      <a href="events.html" class="nav-link is-active">イベント</a>
+      <a href="dashboard.html" class="nav-link">グループ</a>
+      <a href="shifts.html" class="nav-link">シフト</a>
+    </div>
+    <div class="app-nav-right">
+      <button class="link-button" id="logout-btn">ログアウト</button>
+    </div>
+  </nav>
+
+  <div class="message" id="program-message" role="alert"></div>
+
+  <div class="events-layout">
+    <div class="card">
+      <div class="card-header-row">
+        <h2 class="section-title">企画管理</h2>
+        <a href="events.html" class="button-secondary">← イベントに戻る</a>
+      </div>
+
+      <div class="field">
+        <label for="program-event-select">対象イベント</label>
+        <select id="program-event-select">
+          <option value="">イベントを選択してください</option>
+        </select>
+      </div>
+
+      <form id="create-program-form">
+        <div class="field">
+          <label for="program-booth-select">ブース</label>
+          <select id="program-booth-select" required>
+            <option value="">ブースを選択してください</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="program-name">企画名</label>
+          <input type="text" id="program-name" placeholder="例: ライブステージ" required>
+        </div>
+        <div class="field">
+          <label for="program-organizer">主催</label>
+          <input type="text" id="program-organizer" placeholder="例: 1年有志">
+        </div>
+        <button type="submit" class="primary">企画を登録する</button>
+      </form>
+
+      <div class="field-list-wrap">
+        <h3 class="subsection-title">登録済みの企画</h3>
+        <ul class="group-list" id="program-list">
+          <li class="group-empty">まだ企画がありません</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="js/programs.js"></script>
+</body>
+</html>
