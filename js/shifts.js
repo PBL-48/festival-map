@@ -10,11 +10,12 @@ const shiftForm = document.getElementById('shift-form');
 const groupCheckboxesEl = document.getElementById('shift-group-checkboxes');
 const circleMembersEl = document.getElementById('circle-members');
 const eventSelect = document.getElementById('shift-event-select');
-const boothInput = document.getElementById('shift-booth-input');
+const programInput = document.getElementById('shift-program-input');
+const programIdInput = document.getElementById('shift-program-id');
 const boothIdInput = document.getElementById('shift-booth-id');
-const boothSuggestions = document.getElementById('shift-booth-suggestions');
+const programSuggestions = document.getElementById('shift-program-suggestions');
 
-let eventBooths = [];
+let eventPrograms = []; // {id, label, boothId}
 let groups = [];
 let selectedGroupIds = new Set();
 
@@ -110,43 +111,56 @@ async function renderCircleMembers(groupIds) {
   }
 }
 
-// ---------- イベント・ブース ----------
+// ---------- イベント・企画 ----------
 async function loadEvents() {
   const result = await loadEventsWithRange(supabase);
   if (result.error) { showMessage(translateError(result.error), 'error'); return []; }
   return result.events.map((event) => ({ ...event, label: buildEventLabel(event) }));
 }
 
-async function loadBooths(eventId) {
-  const { data, error } = await supabase.from('booths').select('id, name').eq('event_id', eventId).order('name');
+// 企画をブース名付きで取得(1ブースに複数企画がある前提)
+async function loadProgramsForEvent(eventId) {
+  if (!eventId) return [];
+  const { data, error } = await supabase
+    .from('programs')
+    .select('id, name, booth_id, booths!inner(name, event_id)')
+    .eq('booths.event_id', eventId)
+    .order('name');
   if (error) { showMessage(translateError(error), 'error'); return []; }
-  return data || [];
+  return (data || []).map((p) => ({
+    id: p.id,
+    boothId: p.booth_id,
+    label: `${p.name}(${p.booths?.name ?? '場所不明'})`,
+  }));
 }
 
-function syncBoothSelection() {
-  const value = boothInput.value.trim();
+function syncProgramSelection() {
+  const value = programInput.value.trim();
   if (!value) {
+    programIdInput.value = '';
     boothIdInput.value = '';
-    boothInput.setCustomValidity('');
+    programInput.setCustomValidity('');
     return;
   }
 
-  const matchedBooth = eventBooths.find((booth) => booth.name.toLowerCase() === value.toLowerCase());
-  if (matchedBooth) {
-    boothIdInput.value = matchedBooth.id;
-    boothInput.setCustomValidity('');
+  const matched = eventPrograms.find((p) => p.label.toLowerCase() === value.toLowerCase());
+  if (matched) {
+    programIdInput.value = matched.id;
+    boothIdInput.value = matched.boothId;
+    programInput.setCustomValidity('');
   } else {
+    programIdInput.value = '';
     boothIdInput.value = '';
-    boothInput.setCustomValidity('候補からブースを選んでください');
+    programInput.setCustomValidity('候補から企画を選んでください');
   }
 }
 
-function renderBoothSuggestions(booths) {
-  boothSuggestions.innerHTML = '';
-  for (const booth of booths) {
+function renderProgramSuggestions(programs) {
+  programSuggestions.innerHTML = '';
+  for (const program of programs) {
     const opt = document.createElement('option');
-    opt.value = booth.name;
-    boothSuggestions.appendChild(opt);
+    opt.value = program.label;
+    programSuggestions.appendChild(opt);
   }
 }
 
@@ -154,32 +168,33 @@ eventSelect.addEventListener('change', async () => {
   const eventId = eventSelect.value;
   renderGroupCheckboxes(eventId);
   await renderCircleMembers([]);
-  boothInput.value = '';
+  programInput.value = '';
+  programIdInput.value = '';
   boothIdInput.value = '';
-  boothInput.setCustomValidity('');
-  boothSuggestions.innerHTML = '';
+  programInput.setCustomValidity('');
+  programSuggestions.innerHTML = '';
 
   if (!eventId) {
-    boothInput.disabled = true;
+    programInput.disabled = true;
     return;
   }
 
-  boothInput.disabled = false;
-  eventBooths = await loadBooths(eventId);
-  renderBoothSuggestions(eventBooths);
+  programInput.disabled = false;
+  eventPrograms = await loadProgramsForEvent(eventId);
+  renderProgramSuggestions(eventPrograms);
 });
 
-boothInput.addEventListener('input', syncBoothSelection);
-boothInput.addEventListener('change', syncBoothSelection);
+programInput.addEventListener('input', syncProgramSelection);
+programInput.addEventListener('change', syncProgramSelection);
 
 // ---------- シフト提出 ----------
 function initShiftSubmit(userId) {
   shiftForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    syncBoothSelection();
-    if (boothInput.value.trim() && !boothIdInput.value) {
-      showMessage('候補からブースを選んでください', 'error');
+    syncProgramSelection();
+    if (programInput.value.trim() && !programIdInput.value) {
+      showMessage('候補から企画を選んでください', 'error');
       return;
     }
     if (selectedGroupIds.size === 0) {
@@ -194,6 +209,7 @@ function initShiftSubmit(userId) {
     const commonPayload = {
       user_id: userId,
       event_id: eventSelect.value,
+      program_id: programIdInput.value || null,
       booth_id: boothIdInput.value || null,
       shift_date: document.getElementById('shift-date').value,
       start_time: document.getElementById('shift-start').value,
@@ -213,10 +229,11 @@ function initShiftSubmit(userId) {
     shiftForm.reset();
     selectedGroupIds = new Set();
     groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
-    boothInput.disabled = true;
-    boothSuggestions.innerHTML = '';
+    programInput.disabled = true;
+    programSuggestions.innerHTML = '';
+    programIdInput.value = '';
     boothIdInput.value = '';
-    boothInput.setCustomValidity('');
+    programInput.setCustomValidity('');
     circleMembersEl.innerHTML = '<li class="empty">グループを選択するとメンバーが表示されます</li>';
   });
 }
@@ -231,7 +248,7 @@ if (user) {
 
   const events = await loadEvents();
   fillSelect(eventSelect, events, 'イベントを選択してください');
-  boothInput.disabled = true;
+  programInput.disabled = true;
   groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
 
   initShiftSubmit(user.id);

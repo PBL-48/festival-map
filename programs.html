@@ -40,10 +40,10 @@
 
       <form id="create-program-form">
         <div class="field">
-          <label for="program-booth-select">企画場所</label>
-          <select id="program-booth-select" required>
-            <option value="">企画場所を選択してください</option>
-          </select>
+          <label for="program-booth-input">企画場所</label>
+          <input type="text" id="program-booth-input" list="program-booth-suggestions" placeholder="ブース名を入力してください" required autocomplete="off">
+          <input type="hidden" id="program-booth-id">
+          <datalist id="program-booth-suggestions"></datalist>
         </div>
         <div class="field">
           <label for="program-name">企画名</label>

@@ -7,13 +7,16 @@ const logoutBtn = document.getElementById('logout-btn');
 const messageEl = document.getElementById('program-message');
 
 const eventSelect = document.getElementById('program-event-select');
-const boothSelect = document.getElementById('program-booth-select');
+const boothInput = document.getElementById('program-booth-input');
+const boothIdInput = document.getElementById('program-booth-id');
+const boothSuggestions = document.getElementById('program-booth-suggestions');
 const createProgramForm = document.getElementById('create-program-form');
 const programNameInput = document.getElementById('program-name');
 const programOrganizerInput = document.getElementById('program-organizer');
 const programListEl = document.getElementById('program-list');
 
 let currentEventId = '';
+let eventBooths = [];
 
 function showMessage(text, type) {
   messageEl.textContent = text;
@@ -47,15 +50,35 @@ async function loadPrograms(boothIds) {
   return data || [];
 }
 
-function fillBoothSelect(booths) {
-  boothSelect.innerHTML = '<option value="">ブースを選択してください</option>';
+// ---------- ブース入力(文字入力+候補) ----------
+function renderBoothSuggestions(booths) {
+  boothSuggestions.innerHTML = '';
   for (const booth of booths) {
     const opt = document.createElement('option');
-    opt.value = booth.id;
-    opt.textContent = booth.name;
-    boothSelect.appendChild(opt);
+    opt.value = booth.name;
+    boothSuggestions.appendChild(opt);
   }
 }
+
+function syncBoothSelection() {
+  const value = boothInput.value.trim();
+  if (!value) {
+    boothIdInput.value = '';
+    boothInput.setCustomValidity('');
+    return;
+  }
+  const matched = eventBooths.find((b) => b.name.toLowerCase() === value.toLowerCase());
+  if (matched) {
+    boothIdInput.value = matched.id;
+    boothInput.setCustomValidity('');
+  } else {
+    boothIdInput.value = '';
+    boothInput.setCustomValidity('候補からブースを選んでください');
+  }
+}
+
+boothInput.addEventListener('input', syncBoothSelection);
+boothInput.addEventListener('change', syncBoothSelection);
 
 function renderProgramList(programs, booths) {
   programListEl.innerHTML = '';
@@ -110,7 +133,7 @@ function startEditProgram(li, program) {
   const organizerInput = document.createElement('input');
   organizerInput.type = 'text';
   organizerInput.value = program.organizer ?? '';
-  organizerInput.placeholder = '主催';
+  organizerInput.placeholder = '出展団体';
 
   const saveBtn = document.createElement('button');
   saveBtn.type = 'button';
@@ -150,11 +173,14 @@ async function deleteProgram(programId) {
 
 async function refreshSelectedEvent(eventId) {
   currentEventId = eventId;
-  const booths = await loadBooths(eventId);
-  fillBoothSelect(booths);
+  eventBooths = await loadBooths(eventId);
+  renderBoothSuggestions(eventBooths);
+  boothInput.value = '';
+  boothIdInput.value = '';
+  boothInput.setCustomValidity('');
 
-  const programs = await loadPrograms(booths.map((b) => b.id));
-  renderProgramList(programs, booths);
+  const programs = await loadPrograms(eventBooths.map((b) => b.id));
+  renderProgramList(programs, eventBooths);
 }
 
 async function initEventSelect() {
@@ -183,9 +209,15 @@ eventSelect.addEventListener('change', () => refreshSelectedEvent(eventSelect.va
 
 createProgramForm.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const boothId = boothSelect.value;
+  syncBoothSelection();
+
+  const boothId = boothIdInput.value;
   const name = programNameInput.value.trim();
-  if (!currentEventId || !boothId || !name) return;
+  if (!currentEventId || !name) return;
+  if (!boothId) {
+    showMessage('候補からブースを選んでください', 'error');
+    return;
+  }
 
   const { error } = await supabase.from('programs').insert({
     booth_id: boothId,

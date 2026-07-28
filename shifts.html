@@ -49,10 +49,11 @@
       </ul>
 
       <div class="field">
-        <label for="shift-booth-input">企画場所</label>
-        <input type="text" id="shift-booth-input" list="shift-booth-suggestions" placeholder="ブース名を入力してください" disabled>
+        <label for="shift-program-input">企画名</label>
+        <input type="text" id="shift-program-input" list="shift-program-suggestions" placeholder="企画名を入力してください" disabled autocomplete="off">
+        <input type="hidden" id="shift-program-id">
         <input type="hidden" id="shift-booth-id">
-        <datalist id="shift-booth-suggestions"></datalist>
+        <datalist id="shift-program-suggestions"></datalist>
       </div>
 
       <div class="field">
