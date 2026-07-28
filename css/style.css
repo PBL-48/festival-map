@@ -771,3 +771,21 @@ filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
 .item-edit-row { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
 .item-edit-row input { flex: 1; min-width: 100px; }
 .group-item { flex-wrap: wrap; }
+.onshift-item--clickable {
+    cursor: pointer;
+    border-radius: 6px;
+    transition: background 0.12s;
+  }
+.onshift-item--clickable:hover { background: var(--color-accent-soft); }
+
+.onshift-name { font-weight: 700; }
+
+.popup-program {
+border-top: 1px solid var(--color-border);
+padding: 6px 0 4px;
+margin-top: 4px;
+}
+.popup-program:first-of-type { border-top: none; margin-top: 0; }
+.popup-program-name { font-weight: 700; font-size: 13px; display: block; margin-bottom: 3px; }
+.popup-organizer { font-weight: 400; color: var(--color-ink-soft); font-size: 12px; }
+.popup-shifts { font-size: 12.5px; padding-left: 8px; }

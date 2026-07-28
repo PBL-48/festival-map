@@ -258,3 +258,128 @@ logoutBtn.addEventListener('click', async () => {
   await supabase.auth.signOut();
   window.location.href = 'auth.html';
 });
+
+// ---------- マイシフト一覧+編集 ----------
+const myShiftListEl = document.getElementById('my-shift-list');
+
+async function loadMyShifts(userId) {
+  const { data, error } = await supabase
+    .from('shifts')
+    .select('id, group_id, booth_id, program_id, shift_date, start_time, end_time, note, groups(name), booths(name), programs(name)')
+    .eq('user_id', userId)
+    .order('shift_date', { ascending: true })
+    .order('start_time', { ascending: true });
+  if (error) { showMessage(translateError(error), 'error'); return []; }
+  return data || [];
+}
+
+function renderMyShifts(myShifts) {
+  myShiftListEl.innerHTML = '';
+  if (myShifts.length === 0) {
+    myShiftListEl.innerHTML = '<li class="group-empty">まだシフトがありません</li>';
+    return;
+  }
+
+  for (const s of myShifts) {
+    const li = document.createElement('li');
+    li.className = 'group-item';
+    li.dataset.shiftId = s.id;
+
+    const locationLabel = s.programs?.name
+      ? `${s.programs.name}(${s.booths?.name ?? ''})`
+      : (s.booths?.name ?? '場所未設定');
+
+    const info = document.createElement('span');
+    info.className = 'name';
+    info.style.fontSize = '13.5px';
+    info.innerHTML = `${s.shift_date} ${s.start_time?.slice(0,5)}〜${s.end_time?.slice(0,5)}<br>
+      <span style="color:var(--color-ink-soft); font-size:12px;">${locationLabel} / ${s.groups?.name ?? ''}</span>`;
+
+    const editBtn = document.createElement('button');
+    editBtn.type = 'button';
+    editBtn.className = 'button-secondary';
+    editBtn.textContent = '編集';
+    editBtn.addEventListener('click', () => startEditShift(li, s));
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.type = 'button';
+    deleteBtn.className = 'button-secondary';
+    deleteBtn.textContent = '削除';
+    deleteBtn.addEventListener('click', () => deleteShift(s.id, userId));
+
+    const actions = document.createElement('div');
+    actions.className = 'item-actions';
+    actions.append(editBtn, deleteBtn);
+
+    li.append(info, actions);
+    myShiftListEl.appendChild(li);
+  }
+}
+
+function startEditShift(li, shift) {
+  li.innerHTML = '';
+
+  const dateInput = document.createElement('input');
+  dateInput.type = 'date';
+  dateInput.value = shift.shift_date;
+
+  const startInput = document.createElement('input');
+  startInput.type = 'time';
+  startInput.value = shift.start_time?.slice(0, 5) ?? '';
+
+  const endInput = document.createElement('input');
+  endInput.type = 'time';
+  endInput.value = shift.end_time?.slice(0, 5) ?? '';
+
+  const noteInput = document.createElement('input');
+  noteInput.type = 'text';
+  noteInput.value = shift.note ?? '';
+  noteInput.placeholder = 'メモ(任意)';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.className = 'button-secondary';
+  saveBtn.textContent = '保存';
+  saveBtn.addEventListener('click', async () => {
+    const { error } = await supabase
+      .from('shifts')
+      .update({
+        shift_date: dateInput.value,
+        start_time: startInput.value,
+        end_time: endInput.value,
+        note: noteInput.value.trim() || null,
+      })
+      .eq('id', shift.id);
+    if (error) { showMessage(translateError(error), 'error'); return; }
+    showMessage('シフトを更新しました', 'success');
+    const myShifts = await loadMyShifts(user.id);
+    renderMyShifts(myShifts);
+  });
+
+  const cancelBtn = document.createElement('button');
+  cancelBtn.type = 'button';
+  cancelBtn.className = 'link-button';
+  cancelBtn.textContent = 'キャンセル';
+  cancelBtn.addEventListener('click', async () => {
+    const myShifts = await loadMyShifts(user.id);
+    renderMyShifts(myShifts);
+  });
+
+  const row = document.createElement('div');
+  row.className = 'item-edit-row';
+  row.append(dateInput, startInput, endInput, noteInput, saveBtn, cancelBtn);
+  li.appendChild(row);
+}
+
+async function deleteShift(shiftId, userId) {
+  if (!confirm('このシフトを削除しますか?')) return;
+  const { error } = await supabase.from('shifts').delete().eq('id', shiftId);
+  if (error) { showMessage(translateError(error), 'error'); return; }
+  showMessage('シフトを削除しました', 'success');
+  const myShifts = await loadMyShifts(userId);
+  renderMyShifts(myShifts);
+}
+
+// 初期ロード(initShiftSubmitの呼び出しのあとに追加)
+const myShifts = await loadMyShifts(user.id);
+renderMyShifts(myShifts);
