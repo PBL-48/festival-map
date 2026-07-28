@@ -24,17 +24,48 @@
 
   <div class="message" id="event-detail-message" role="alert"></div>
 
+  <!-- イベント選択 + 編集・削除 -->
   <div class="card details-card">
     <div class="card-header-row">
       <h1 style="margin:0;">イベント詳細</h1>
-      <a class="button-secondary" href="events.html">編集ページへ戻る</a>
+      <a class="button-secondary" href="events.html">← イベント一覧</a>
     </div>
+
     <div class="field">
       <label for="detail-event-select">イベントを選ぶ</label>
       <select id="detail-event-select">
         <option value="">イベントを選択してください</option>
       </select>
     </div>
+
+    <!-- 編集フォーム(選択したイベントの内容が入った状態で表示) -->
+    <div id="event-edit-section" hidden>
+      <h2 class="section-title" style="margin-top:24px;">イベントを編集する</h2>
+      <form id="edit-event-form">
+        <div class="field">
+          <label for="edit-event-name">イベント名</label>
+          <input type="text" id="edit-event-name" required>
+        </div>
+        <div class="field-row">
+          <div class="field">
+            <label for="edit-event-start">開始日</label>
+            <input type="date" id="edit-event-start" required>
+          </div>
+          <div class="field">
+            <label for="edit-event-end">終了日</label>
+            <input type="date" id="edit-event-end" required>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button type="submit" class="primary" style="flex:1; margin-top:0;">変更を保存する</button>
+          <button type="button" class="button-secondary" id="delete-event-btn">このイベントを削除する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ブース・企画一覧(閲覧) -->
+  <div class="card details-card">
     <div class="event-summary-grid">
       <div>
         <h3 class="subsection-title">企画場所一覧</h3>

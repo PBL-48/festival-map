@@ -112,8 +112,13 @@ async function renderCircleMembers(groupIds) {
 }
 
 // ---------- イベント・企画 ----------
-async function loadEvents() {
-  const result = await loadEventsWithRange(supabase);
+// 変更後: 自分が所属するグループのイベントだけに絞り込む
+async function loadMyEvents(myGroups) {
+  // groupsのevent_idをユニークに集める
+  const eventIds = [...new Set(myGroups.map((g) => g.event_id).filter(Boolean))];
+  if (eventIds.length === 0) return [];
+
+  const result = await loadEventsWithRange(supabase, eventIds);
   if (result.error) { showMessage(translateError(result.error), 'error'); return []; }
   return result.events.map((event) => ({ ...event, label: buildEventLabel(event) }));
 }
@@ -248,7 +253,8 @@ if (user) {
 
   groups = await loadMyGroups(user.id);
 
-  const events = await loadEvents();
+  // 変更: loadEvents() → loadMyEvents(groups)
+  const events = await loadMyEvents(groups);
   fillSelect(eventSelect, events, 'イベントを選択してください');
   programInput.disabled = true;
   groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
