@@ -1,6 +1,92 @@
-<div class="card" style="margin-top: 20px;">
-    <h2 class="section-title">提出済みのシフト</h2>
-    <ul class="group-list" id="my-shift-list">
-      <li class="group-empty">読み込み中...</li>
-    </ul>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>シフト — Festival Map</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@500;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body class="centered-page">
+  <nav class="app-nav">
+    <span class="who" id="who">読み込み中...</span>
+    <div class="app-nav-links">
+      <a href="map.html" class="nav-link">マップ</a>
+      <a href="events.html" class="nav-link">イベント</a>
+      <a href="dashboard.html" class="nav-link">グループ</a>
+      <a href="shifts.html" class="nav-link is-active">シフト</a>
+    </div>
+    <div class="app-nav-right">
+      <button class="link-button" id="logout-btn">ログアウト</button>
+    </div>
+  </nav>
+
+  <div class="message" id="shift-message" role="alert"></div>
+
+  <!-- シフト提出 -->
+<div class="events-layout">
+  <div class="card">
+    <h2 class="section-title">シフトを提出する</h2>
+
+    <form id="shift-form">
+      <div class="field">
+        <label for="shift-event-select">イベント</label>
+        <select id="shift-event-select" required>
+          <option value="">イベントを選択してください</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>提出するグループ（複数選択可）</label>
+        <div class="group-checkbox-list" id="shift-group-checkboxes">
+          <p class="group-empty">イベントを選択すると表示されます</p>
+        </div>
+      </div>
+
+      <ul class="member-chips" id="circle-members">
+        <li class="empty">グループを選択するとメンバーが表示されます</li>
+      </ul>
+
+      <div class="field">
+        <label for="shift-program-input">企画名</label>
+        <input type="text" id="shift-program-input" list="shift-program-suggestions" placeholder="企画名を入力してください" disabled autocomplete="off">
+        <input type="hidden" id="shift-program-id">
+        <input type="hidden" id="shift-booth-id">
+        <datalist id="shift-program-suggestions"></datalist>
+      </div>
+
+      <div class="field">
+        <label for="shift-date">日付</label>
+        <input type="date" id="shift-date" required>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label for="shift-start">開始時刻</label>
+          <input type="time" id="shift-start" required>
+        </div>
+        <div class="field">
+          <label for="shift-end">終了時刻</label>
+          <input type="time" id="shift-end" required>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="shift-note">メモ(任意)</label>
+        <textarea id="shift-note" placeholder="例: 前半のみ / 撤収まで対応可"></textarea>
+      </div>
+
+      <button type="submit" class="primary">シフトを提出する</button>
+    </form>
+    <div class="card" style="margin-top: 20px;">
+        <h2 class="section-title">提出済みのシフト</h2>
+        <ul class="group-list" id="my-shift-list">
+          <li class="group-empty">読み込み中...</li>
+        </ul>
+      </div>
   </div>
+</div>
+  <script type="module" src="js/shifts.js"></script>
+</body>
+</html>
