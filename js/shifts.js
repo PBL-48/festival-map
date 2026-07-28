@@ -226,6 +226,8 @@ function initShiftSubmit(userId) {
     if (error) { showMessage(translateError(error), 'error'); return; }
 
     showMessage('シフトを提出しました', 'success');
+    const refreshed = await loadMyShifts(user.id);
+    renderMyShifts(refreshed);
     shiftForm.reset();
     selectedGroupIds = new Set();
     groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';

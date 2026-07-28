@@ -206,15 +206,17 @@
 
   /* 統一ナビゲーションバー */
   .app-nav {
-    width: 100%;
+    width: calc(100% + 32px);   /* bodyのpadding 16px×2を相殺 */
+    margin-left: -16px;
+    margin-right: -16px;
     max-width: none;
     display: flex;
     flex-wrap: wrap;
     align-items: center;
     justify-content: space-between;
     gap: 10px 16px;
-    padding: 12px 18px;
-    margin: 0 0 20px;
+    padding: 12px 24px;         /* 内側の余白は視覚的に整えた値 */
+    margin-bottom: 20px;
     background: var(--color-surface);
     border: 1px solid var(--color-border);
     border-top: none;
@@ -689,13 +691,6 @@
     display: block;
     margin-bottom: 2px;
   }
-
-  /* カスタムピン */
-.booth-pin svg {
-  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-  transition: transform 0.15s ease;
-}
-.leaflet-marker-icon:hover svg { transform: scale(1.15) translateY(-2px); }
 
 /* ツールチップの見た目をサイト全体のトーンに合わせる */
 .leaflet-tooltip.booth-tooltip {
