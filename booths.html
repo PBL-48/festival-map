@@ -29,7 +29,7 @@
   <div class="events-layout">
     <div class="card">
       <div class="card-header-row">
-        <h2 class="section-title">ブース管理</h2>
+        <h2 class="section-title">企画場所管理</h2>
         <a href="events.html" class="button-secondary">← イベントに戻る</a>
       </div>
 
@@ -42,21 +42,21 @@
 
       <form id="create-booth-form">
         <div class="field">
-          <label for="booth-name">ブース名</label>
-          <input type="text" id="booth-name" placeholder="例: たこ焼き店" required>
+          <label for="booth-name">企画場所名</label>
+          <input type="text" id="booth-name" placeholder="例: 中央通りA1" required>
         </div>
         <div class="event-map-shell">
           <div id="event-booth-map"></div>
-          <p class="map-hint static" id="booth-map-hint">地図をクリックしてブースの位置を決めてください</p>
+          <p class="map-hint static" id="booth-map-hint">地図をクリックして位置を決めてください</p>
         </div>
         <p class="helper-text" id="booth-coords">座標未設定</p>
-        <button type="submit" class="primary">ブースを登録する</button>
+        <button type="submit" class="primary">登録</button>
       </form>
 
       <div class="field-list-wrap">
-        <h3 class="subsection-title">登録済みのブース</h3>
+        <h3 class="subsection-title">登録済みの企画場所</h3>
         <ul class="group-list" id="booth-list">
-          <li class="group-empty">まだブースがありません</li>
+          <li class="group-empty">まだ企画場所がありません</li>
         </ul>
       </div>
     </div>

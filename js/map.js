@@ -58,11 +58,14 @@ async function loadBooths(eventId) {
   return (data || []).filter((b) => b.lat != null && b.lng != null);
 }
 
-async function loadPrograms(boothIds) {
-  if (boothIds.length === 0) return [];
-  const { data, error } = await supabase.from('programs').select('id, booth_id, name, organizer').in('booth_id', boothIds);
-  if (error) { showMessage(translateError(error), 'error'); return []; }
-  return data || [];
+async function loadProgramsForEvent(eventId) {
+    if (!eventId) return [];
+    const { data, error } = await supabase
+      .from('programs')
+      .select('id, booth_id, name, organizer, booths!inner(event_id)')
+      .eq('booths.event_id', eventId);
+    if (error) { showMessage(translateError(error), 'error'); return []; }
+    return data || [];
 }
 
 async function loadShifts(groupIds) {
@@ -211,18 +214,18 @@ async function refreshShiftsAndPanels() {
 }
 
 async function loadEventData(eventId) {
-  currentEventId = eventId;
-  groupsForEvent = allUserGroups.filter((g) => g.eventId === eventId);
-  selectedGroupIds = new Set(groupsForEvent.map((g) => g.id));
-  renderGroupCheckboxes();
+    currentEventId = eventId;
+    groupsForEvent = allUserGroups.filter((g) => g.eventId === eventId);
+    selectedGroupIds = new Set(groupsForEvent.map((g) => g.id));
+    renderGroupCheckboxes();
 
-  booths = await loadBooths(eventId);
-  programs = await loadPrograms(booths.map((b) => b.id));
-  shifts = await loadShifts([...selectedGroupIds]);
+    booths = await loadBooths(eventId);
+    programs = await loadProgramsForEvent(eventId);   // ← ここを変更
+    shifts = await loadShifts([...selectedGroupIds]);
 
-  renderMarkers();
-  renderOnShiftPanel();
-}
+    renderMarkers();
+    renderOnShiftPanel();
+  }
 
 function initLeafletMap() {
     leafletMap = L.map('leaflet-map').setView([35.6812, 139.7671], 16);

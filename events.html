@@ -27,10 +27,10 @@
   <div class="events-layout">
     <div class="card">
       <div class="card-header-row">
-        <h2 class="section-title">イベントの選択</h2>
+        <h2 class="section-title">イベントの管理</h2>
         <button class="button-secondary" id="open-create-event-modal" type="button">＋ イベント追加</button>
       </div>
-      <p class="helper-text">ブース・企画の登録は、イベントを選んだ上でそれぞれの管理ページから行えます。</p>
+      <p class="helper-text">企画場所・企画の登録は、イベントを選んだ上でそれぞれの管理ページから行えます。</p>
       <div class="field">
         <label for="admin-event-select">イベントを選ぶ</label>
         <select id="admin-event-select">
@@ -38,16 +38,16 @@
         </select>
       </div>
       <div class="item-actions">
-        <a class="button-secondary" id="event-detail-link" href="event-details.html">イベント詳細を見る</a>
-        <a class="button-secondary" id="booth-manage-link" href="booths.html">ブースを管理</a>
-        <a class="button-secondary" id="program-manage-link" href="programs.html">企画を管理</a>
+        <a class="button-secondary" id="event-detail-link" href="event-details.html">イベント詳細</a>
+        <a class="button-secondary" id="booth-manage-link" href="booths.html">企画場所</a>
+        <a class="button-secondary" id="program-manage-link" href="programs.html">企画</a>
       </div>
     </div>
   </div>
 
   <div class="modal-backdrop" id="create-event-modal" hidden>
     <div class="modal">
-      <h2 class="section-title">イベントを追加する</h2>
+      <h2 class="section-title">イベントの追加</h2>
       <form id="create-event-form">
         <div class="field">
           <label for="event-name">イベント名</label>
@@ -63,7 +63,7 @@
             <input type="date" id="event-end-date" required>
           </div>
         </div>
-        <button type="submit" class="primary">イベントを作成する</button>
+        <button type="submit" class="primary">イベントを作成</button>
       </form>
       <button class="link-button" id="close-create-event-modal" style="width:100%; margin-top:10px;">閉じる</button>
     </div>
