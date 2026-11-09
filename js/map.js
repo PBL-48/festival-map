@@ -5,6 +5,7 @@ const whoEl = document.getElementById('who');
 const logoutBtn = document.getElementById('logout-btn');
 const messageEl = document.getElementById('map-message');
 const eventSelect = document.getElementById('event-select');
+const eventSelectCard = document.getElementById('event-select-card');
 const groupCheckboxesEl = document.getElementById('group-checkboxes');
 const onshiftListEl = document.getElementById('onshift-list');
 
@@ -99,8 +100,9 @@ async function loadShifts(groupIds) {
 
 // ---------- アクティブ判定 ----------
 function isShiftActiveNow(shift) {
+
   const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   const nowTime = now.toTimeString().slice(0, 5);
   return shift.shift_date === todayStr &&
     (shift.start_time?.slice(0, 5) ?? '') <= nowTime &&
@@ -317,10 +319,15 @@ if (currentUser) {
   if (eventList.length === 0) {
     showMessage('まだどのグループにも参加していません。先に「グループ」からグループの作成・参加を行ってください。', 'error');
   } else {
-    if (eventList.length > 1) {
-      eventSelect.hidden = false;
-      eventSelect.innerHTML = eventList.map((ev) => `<option value="${ev.id}">${escapeHtml(ev.name)}</option>`).join('');
+    if (eventSelect) {
+      eventSelect.innerHTML = eventList
+        .map((ev) => `<option value="${ev.id}">${escapeHtml(ev.name)}</option>`)
+        .join('');
+      eventSelect.value = eventList[0].id;
       eventSelect.addEventListener('change', () => loadEventData(eventSelect.value));
+      // 複数イベントのときだけ表示（常に表示したいなら条件を外す）
+      if (eventSelectCard) eventSelectCard.hidden = eventList.length <= 1;
+      else eventSelect.hidden = eventList.length <= 1;
     }
     await loadEventData(eventList[0].id);
   }
