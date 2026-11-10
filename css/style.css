@@ -479,21 +479,6 @@
   }
 
   /* シフト一覧 */
-  .shift-list { list-style: none; margin: 0; padding: 0; max-height: 320px; overflow-y: auto; }
-.shift-item { padding: 8px 10px; border-bottom: 1px solid #eee; cursor: pointer; }
-.shift-item:hover { background: #f7f7f7; }
-.shift-item.is-active {
-  background: #fff4d6;
-  border-left: 4px solid #f0a500;
-  font-weight: 600;
-}
-.shift-time { display: flex; align-items: center; gap: 6px; }
-.shift-badge {
-  font-size: 0.75rem; padding: 1px 6px; border-radius: 999px;
-  background: #f0a500; color: #fff;
-}
-.shift-meta { font-size: 0.85rem; color: #666; }
-.shift-item:last-child { border-bottom: none; }
 .shift-item .top-row {
   display: flex;
   justify-content: space-between;
@@ -681,11 +666,7 @@
 
   .onshift-time { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 
-  .onshift-item--active {
-    background: #fff4d6;
-    border-left: 4px solid var(--color-error);
-    font-weight: 600;
-  }
+  .onshift-item--active { padding-left: 8px; padding-right: 6px; border-radius: 6px; }
 
   .onshift-badge {
     font-size: 0.7rem;
@@ -736,16 +717,6 @@
 .leaflet-tooltip.booth-tooltip::before {
   border-top-color: var(--color-surface);
 }
-.field-list-wrap { margin-top: 24px; }
-.subsection-title {
-  font-family: var(--font-display);
-  font-size: 15px;
-  margin: 0 0 12px;
-}
-.item-actions { display: flex; gap: 6px; flex-wrap: wrap; }
-.item-edit-row { display: flex; gap: 8px; flex-wrap: wrap; width: 100%; }
-.item-edit-row input { flex: 1; min-width: 100px; }
-.group-item { flex-wrap: wrap; }
 
 /* ピンとツールチップ(map.htmlと共通のスタイル) */
 .booth-pin svg {
