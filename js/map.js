@@ -7,11 +7,17 @@ const messageEl = document.getElementById('map-message');
 const eventSelect = document.getElementById('event-select');
 const eventSelectCard = document.getElementById('event-select-card');
 const groupCheckboxesEl = document.getElementById('group-checkboxes');
-const onshiftListEl = document.getElementById('onshift-list');
+const shiftListEl = document.getElementById('onshift-list'); // シフト一覧の器（id は既存のまま）
 
 function showMessage(text, type) {
+  if (!messageEl) return;
   messageEl.textContent = text;
   messageEl.className = `message ${type}`;
+}
+function clearMessage() {
+  if (!messageEl) return;
+  messageEl.textContent = '';
+  messageEl.className = 'message';
 }
 function translateError(error) {
   return `エラーが発生しました: ${error?.message || ''}`;
@@ -21,7 +27,16 @@ function escapeHtml(str) {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
   }[ch]));
 }
-function formatTime(t) { return t ? t.slice(0, 5) : ''; }
+function formatTime(t) { return t ? String(t).slice(0, 5) : ''; }
+
+const pad2 = (n) => String(n).padStart(2, '0');
+const hm = (d) => `${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+const dateKey = (d) => `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+function formatDateLabel(d) {
+  const wd = '日月火水木金土'[d.getDay()];
+  const isToday = dateKey(d) === dateKey(new Date());
+  return `${d.getMonth() + 1}/${d.getDate()}(${wd})${isToday ? ' 今日' : ''}`;
+}
 
 // ---------- 状態 ----------
 let currentUser = null;
@@ -35,6 +50,7 @@ let shifts = [];
 let leafletMap = null;
 let markerLayer = null;
 let boothMarkers = new Map(); // booth.id → Leaflet marker
+let loadSeq = 0;              // イベント切替・絞り込みの競合防止用
 
 // ---------- アイコン ----------
 const boothIconActive = L.divIcon({
@@ -98,19 +114,38 @@ async function loadShifts(groupIds) {
   return data || [];
 }
 
-// ---------- アクティブ判定 ----------
-function isShiftActiveNow(shift) {
-
-  const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
-  const nowTime = now.toTimeString().slice(0, 5);
-  return shift.shift_date === todayStr &&
-    (shift.start_time?.slice(0, 5) ?? '') <= nowTime &&
-    nowTime <= (shift.end_time?.slice(0, 5) ?? '');
+// ---------- 時刻判定（ローカル時刻・日付またぎ対応） ----------
+// 'YYYY-MM-DDTHH:MM'（タイムゾーン指定なし）はローカル時刻として解釈される
+function getShiftRange(shift) {
+  if (!shift.shift_date || !shift.start_time || !shift.end_time) return null;
+  const start = new Date(`${shift.shift_date}T${formatTime(shift.start_time)}`);
+  const end = new Date(`${shift.shift_date}T${formatTime(shift.end_time)}`);
+  if (isNaN(start) || isNaN(end)) return null;
+  if (end <= start) end.setDate(end.getDate() + 1); // 22:00〜02:00 など
+  return { start, end };
 }
 
-function isBoothActiveNow(boothId) {
-  return shifts.some((s) => s.booth_id === boothId && selectedGroupIds.has(s.group_id) && isShiftActiveNow(s));
+function isShiftActiveNow(shift, now = new Date()) {
+  const r = getShiftRange(shift);
+  return !!r && r.start <= now && now < r.end;
+}
+
+function isShiftUpcomingOrActive(shift, now = new Date()) {
+  const r = getShiftRange(shift);
+  return !!r && r.end > now; // 終了済みは除外
+}
+
+function isBoothActiveNow(boothId, now = new Date()) {
+  return shifts.some((s) => s.booth_id === boothId && selectedGroupIds.has(s.group_id) && isShiftActiveNow(s, now));
+}
+
+// 企画名があれば「企画名(場所)」、なければ「場所」だけ
+function shiftLocationLabel(shift) {
+  const booth = booths.find((b) => b.id === shift.booth_id);
+  const program = programs.find((p) => p.id === shift.program_id);
+  return program
+    ? `${program.name}(${booth?.name ?? '場所未設定'})`
+    : (booth?.name ?? '場所未設定');
 }
 
 // ---------- グループチェックボックス ----------
@@ -135,32 +170,50 @@ function renderGroupCheckboxes() {
   }
 }
 
-// ---------- 現在シフト中パネル ----------
-function renderOnShiftPanel() {
-  const active = shifts.filter((s) => selectedGroupIds.has(s.group_id) && isShiftActiveNow(s));
+// ---------- シフト一覧パネル ----------
+function renderShiftList() {
+  if (!shiftListEl) return;
+  const now = new Date();
 
-  onshiftListEl.innerHTML = '';
-  if (active.length === 0) {
-    onshiftListEl.innerHTML = '<p class="group-empty">現在シフト中のメンバーはいません</p>';
+  const list = shifts
+    .filter((s) => selectedGroupIds.has(s.group_id) && isShiftUpcomingOrActive(s, now))
+    .sort((a, b) => getShiftRange(a).start - getShiftRange(b).start);
+
+  shiftListEl.innerHTML = '';
+  if (list.length === 0) {
+    shiftListEl.innerHTML = '<p class="group-empty">これからのシフトはありません</p>';
     return;
   }
 
-  for (const s of active) {
+  let lastDateKey = null;
+  for (const s of list) {
+    const { start, end } = getShiftRange(s);
+
+    // 日付が変わるごとに見出しを入れる
+    const key = dateKey(start);
+    if (key !== lastDateKey) {
+      const heading = document.createElement('div');
+      heading.className = 'shift-date-heading';
+      heading.textContent = formatDateLabel(start);
+      shiftListEl.appendChild(heading);
+      lastDateKey = key;
+    }
+
+    const active = isShiftActiveNow(s, now);
     const booth = booths.find((b) => b.id === s.booth_id);
-    const program = programs.find((p) => p.id === s.program_id);
 
     const div = document.createElement('div');
     div.className = 'onshift-item';
+    if (active) div.classList.add('onshift-item--active');
     if (booth) div.classList.add('onshift-item--clickable');
 
-    // 企画名があれば「企画名(場所)」、なければ「場所」だけ
-    const locationLabel = program
-      ? `${program.name}(${booth?.name ?? '場所未設定'})`
-      : (booth?.name ?? '場所未設定');
-
     div.innerHTML = `
+      <span class="onshift-time">
+        ${hm(start)}〜${hm(end)}
+        ${active ? '<span class="onshift-badge">シフト中</span>' : ''}
+      </span>
       <span class="onshift-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
-      <span class="booth">${escapeHtml(locationLabel)}</span>
+      <span class="booth">${escapeHtml(shiftLocationLabel(s))}</span>
     `;
 
     // クリックで該当ピンを開く
@@ -173,22 +226,28 @@ function renderOnShiftPanel() {
       });
     }
 
-    onshiftListEl.appendChild(div);
+    shiftListEl.appendChild(div);
   }
 }
 
 // ---------- ポップアップ ----------
+function shiftLineHtml(s) {
+  const isActive = isShiftActiveNow(s);
+  return `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">`
+    + `${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`
+    + `</span>`;
+}
+
 function boothPopupHtml(booth) {
   const boothPrograms = programs.filter((p) => p.booth_id === booth.id);
   const boothShifts = shifts.filter((s) => s.booth_id === booth.id && selectedGroupIds.has(s.group_id));
 
   let html = `<div class="booth-popup"><h3>${escapeHtml(booth.name)}</h3>`;
 
-  // 企画一覧(シフトと統合して企画ごとに表示)
   if (boothPrograms.length > 0) {
+    // 企画ごとにシフトを表示
     for (const prog of boothPrograms) {
       const progShifts = boothShifts.filter((s) => s.program_id === prog.id);
-      const unlinkedShifts = boothShifts.filter((s) => !s.program_id);
 
       html += `<div class="popup-program">`;
       html += `<span class="popup-program-name">${escapeHtml(prog.name)}`;
@@ -196,27 +255,16 @@ function boothPopupHtml(booth) {
       html += `</span>`;
 
       if (progShifts.length > 0) {
-        html += `<div class="popup-shifts">`;
-        for (const s of progShifts) {
-          const isActive = isShiftActiveNow(s);
-          html += `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">`;
-          html += `${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`;
-          html += `</span><br>`;
-        }
-        html += `</div>`;
+        html += `<div class="popup-shifts">${progShifts.map(shiftLineHtml).join('<br>')}</div>`;
       }
-
       html += `</div>`;
     }
 
-    // program_idがないシフト(企画と紐づいていないシフト)があれば最後に表示
+    // 企画と紐づいていないシフト
     const orphanShifts = boothShifts.filter((s) => !s.program_id);
     if (orphanShifts.length > 0) {
       html += `<div class="popup-section"><span class="label">その他のシフト</span><br>`;
-      html += orphanShifts.map((s) => {
-        const isActive = isShiftActiveNow(s);
-        return `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}</span>`;
-      }).join('<br>');
+      html += orphanShifts.map(shiftLineHtml).join('<br>');
       html += `</div>`;
     }
   } else {
@@ -224,10 +272,7 @@ function boothPopupHtml(booth) {
     html += `<div class="popup-section"><span class="label">企画</span>未登録</div>`;
     if (boothShifts.length > 0) {
       html += `<div class="popup-section"><span class="label">シフト</span><br>`;
-      html += boothShifts.map((s) => {
-        const isActive = isShiftActiveNow(s);
-        return `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}</span>`;
-      }).join('<br>');
+      html += boothShifts.map(shiftLineHtml).join('<br>');
       html += `</div>`;
     }
   }
@@ -237,12 +282,14 @@ function boothPopupHtml(booth) {
 }
 
 // ---------- マーカー描画 ----------
-function renderMarkers() {
+function renderMarkers({ fit = false } = {}) {
+  if (!markerLayer) return;
   markerLayer.clearLayers();
   boothMarkers.clear();
 
+  const now = new Date();
   for (const booth of booths) {
-    const icon = isBoothActiveNow(booth.id) ? boothIconActive : boothIconInactive;
+    const icon = isBoothActiveNow(booth.id, now) ? boothIconActive : boothIconInactive;
     const marker = L.marker([booth.lat, booth.lng], { icon });
     marker.bindPopup(() => boothPopupHtml(booth), {
       className: 'booth-tooltip',
@@ -253,31 +300,52 @@ function renderMarkers() {
     boothMarkers.set(booth.id, marker); // クリックジャンプ用に保持
   }
 
-  if (booths.length > 0) {
+  // 表示範囲の自動調整はイベント読み込み時のみ（定期更新で視点が戻らないように）
+  if (fit && booths.length > 0) {
     const bounds = L.latLngBounds(booths.map((b) => [b.lat, b.lng]));
     leafletMap.fitBounds(bounds, { padding: [40, 40], maxZoom: 18 });
   }
 }
 
+// 定期更新用：マーカーを作り直さずアイコンだけ切り替える（開いているポップアップを閉じない）
+function updateMarkerIcons() {
+  const now = new Date();
+  for (const [boothId, marker] of boothMarkers) {
+    marker.setIcon(isBoothActiveNow(boothId, now) ? boothIconActive : boothIconInactive);
+  }
+}
+
 // ---------- 更新 ----------
 async function refreshShiftsAndPanels() {
-  shifts = await loadShifts([...selectedGroupIds]);
-  renderOnShiftPanel();
+  const seq = ++loadSeq;
+  const result = await loadShifts([...selectedGroupIds]);
+  if (seq !== loadSeq) return; // より新しい操作が走っていれば破棄
+  shifts = result;
+  renderShiftList();
   renderMarkers();
 }
 
 async function loadEventData(eventId) {
+  const seq = ++loadSeq;
+  clearMessage();
   currentEventId = eventId;
   groupsForEvent = allUserGroups.filter((g) => g.eventId === eventId);
   selectedGroupIds = new Set(groupsForEvent.map((g) => g.id));
   renderGroupCheckboxes();
 
-  booths = await loadBooths(eventId);
-  programs = await loadProgramsForEvent(eventId);
-  shifts = await loadShifts([...selectedGroupIds]);
+  const [b, p, s] = await Promise.all([
+    loadBooths(eventId),
+    loadProgramsForEvent(eventId),
+    loadShifts([...selectedGroupIds]),
+  ]);
+  if (seq !== loadSeq) return; // 読み込み中に別イベントへ切り替えられた場合は破棄
 
-  renderMarkers();
-  renderOnShiftPanel();
+  booths = b;
+  programs = p;
+  shifts = s;
+
+  renderMarkers({ fit: true });
+  renderShiftList();
 }
 
 // ---------- 地図初期化 ----------
@@ -295,10 +363,11 @@ function initLeafletMap() {
   requestAnimationFrame(() => setTimeout(resizeMap, 50));
 }
 
-// 1分ごとに再判定
+// 1分ごとに再判定（ハイライト更新・終了済みシフトの除外）
 setInterval(() => {
-  renderOnShiftPanel();
-  renderMarkers();
+  if (!markerLayer) return;
+  renderShiftList();
+  updateMarkerIcons();
 }, 60000);
 
 // ---------- 初期化 ----------
@@ -321,7 +390,7 @@ if (currentUser) {
   } else {
     if (eventSelect) {
       eventSelect.innerHTML = eventList
-        .map((ev) => `<option value="${ev.id}">${escapeHtml(ev.name)}</option>`)
+        .map((ev) => `<option value="${escapeHtml(ev.id)}">${escapeHtml(ev.name || '(名称未設定のイベント)')}</option>`)
         .join('');
       eventSelect.value = eventList[0].id;
       eventSelect.addEventListener('change', () => loadEventData(eventSelect.value));
