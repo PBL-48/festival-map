@@ -50,7 +50,7 @@
         <div class="field">
           <label for="shift-program-input">企画</label>
           <input type="text" id="shift-program-input" list="shift-program-suggestions"
-            placeholder="企画名を入力してください" disabled autocomplete="off" required>
+            placeholder="企画名または企画場所を入力してください。候補から選択できます。" disabled autocomplete="off" required>
           <input type="hidden" id="shift-program-id">
           <datalist id="shift-program-suggestions"></datalist>
         </div>
@@ -73,7 +73,7 @@
 
         <div class="field">
           <label for="shift-note">メモ(任意)</label>
-          <textarea id="shift-note" placeholder="例: 前半のみ / 撤収まで対応可"></textarea>
+          <textarea id="shift-note" placeholder="例: 109教室 / 常駐してます"></textarea>
         </div>
 
         <button type="submit" class="primary">シフトを提出する</button>
