@@ -666,14 +666,12 @@
 
   .onshift-time { display: inline-flex; align-items: center; gap: 6px; font-variant-numeric: tabular-nums; }
 
-  .onshift-item--active { padding-left: 8px; padding-right: 6px; border-radius: 6px; }
-
-  .onshift-badge {
-    font-size: 0.7rem;
-    padding: 1px 6px;
-    border-radius: 999px;
-    background: var(--color-error);
-    color: #fff;
+  .onshift-item--active {
+    padding-left: 8px;
+    padding-right: 6px;
+    border-left: 3px solid var(--color-error);
+    border-radius: 6px;
+    background: var(--color-accent-soft);
   }
   .onshift-item {
     display: flex;
@@ -772,6 +770,7 @@ filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
     transition: background 0.12s;
   }
 .onshift-item--clickable:hover { background: var(--color-accent-soft); }
+.onshift-item--active.onshift-item--clickable:hover { background: var(--color-accent-soft); }
 
 .onshift-name { font-weight: 700; }
 

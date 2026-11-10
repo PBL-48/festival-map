@@ -210,7 +210,6 @@ function renderShiftList() {
     div.innerHTML = `
       <span class="onshift-time">
         ${hm(start)}〜${hm(end)}
-        ${active ? '<span class="onshift-badge">シフト中</span>' : ''}
       </span>
       <span class="onshift-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
       <span class="booth">${escapeHtml(shiftLocationLabel(s))}</span>
