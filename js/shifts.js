@@ -10,12 +10,12 @@ const shiftForm = document.getElementById('shift-form');
 const groupCheckboxesEl = document.getElementById('shift-group-checkboxes');
 const circleMembersEl = document.getElementById('circle-members');
 const eventSelect = document.getElementById('shift-event-select');
-const boothInput = document.getElementById('shift-booth-input');
-const boothIdInput = document.getElementById('shift-booth-id');
-const boothSuggestions = document.getElementById('shift-booth-suggestions');
+const programInput = document.getElementById('shift-program-input');
+const programIdInput = document.getElementById('shift-program-id');
+const programSuggestions = document.getElementById('shift-program-suggestions');
 const myShiftListEl = document.getElementById('my-shift-list');
 
-let eventBooths = [];
+let eventPrograms = [];
 let groups = [];
 let selectedGroupIds = new Set();
 let currentUserId = null;
@@ -26,6 +26,11 @@ function showMessage(text, type) {
 }
 function translateError(error) {
   return `エラーが発生しました: ${error?.message || ''}`;
+}
+function escapeHtml(value) {
+  return String(value ?? '').replace(/[&<>"']/g, (ch) => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+  }[ch]));
 }
 function fillSelect(select, items, placeholder) {
   select.innerHTML = `<option value="">${placeholder}</option>`;
@@ -102,7 +107,7 @@ async function renderCircleMembers(groupIds) {
   }
 }
 
-// ---------- イベント・ブース ----------
+// ---------- イベント・企画 ----------
 async function loadMyEvents(myGroups) {
   const eventIds = [...new Set(myGroups.map((g) => g.event_id).filter(Boolean))];
   if (eventIds.length === 0) return [];
@@ -111,61 +116,78 @@ async function loadMyEvents(myGroups) {
   return result.events.map((ev) => ({ ...ev, label: buildEventLabel(ev) }));
 }
 
-async function loadBooths(eventId) {
+async function loadPrograms(eventId) {
   const { data, error } = await supabase
-    .from('booths').select('id, name').eq('event_id', eventId).order('name');
+    .from('programs')
+    .select('id, name, organizer, booth_id, booths!inner(event_id, name)')
+    .eq('booths.event_id', eventId)
+    .order('name');
   if (error) { showMessage(translateError(error), 'error'); return []; }
   return data || [];
 }
 
-function syncBoothSelection() {
-  const value = boothInput.value.trim();
-  if (!value) { boothIdInput.value = ''; boothInput.setCustomValidity(''); return; }
-  const matched = eventBooths.find((b) => b.name.toLowerCase() === value.toLowerCase());
-  if (matched) {
-    boothIdInput.value = matched.id;
-    boothInput.setCustomValidity('');
-  } else {
-    boothIdInput.value = '';
-    boothInput.setCustomValidity('候補からブースを選んでください');
+function renderProgramOptions(programs) {
+  programSuggestions.innerHTML = '';
+  for (const program of programs) {
+    const option = document.createElement('option');
+    option.value = programLabel(program);
+    programSuggestions.appendChild(option);
   }
+  programInput.disabled = programs.length === 0;
 }
 
-function renderBoothSuggestions(booths) {
-  boothSuggestions.innerHTML = '';
-  for (const booth of booths) {
-    const opt = document.createElement('option');
-    opt.value = booth.name;
-    boothSuggestions.appendChild(opt);
-  }
+function programLabel(program) {
+  return `${program.name}${program.booths?.name ? `（${program.booths.name}）` : ''}`;
+}
+
+function syncProgramSelection() {
+  const value = programInput.value.trim();
+  const matched = eventPrograms.find((program) => (
+    programLabel(program).toLowerCase() === value.toLowerCase()
+    || program.name.toLowerCase() === value.toLowerCase()
+  ));
+  programIdInput.value = matched?.id ?? '';
+  programInput.setCustomValidity(matched ? '' : '候補から企画を選んでください');
 }
 
 eventSelect.addEventListener('change', async () => {
   const eventId = eventSelect.value;
   renderGroupCheckboxes(eventId);
   await renderCircleMembers([]);
-  boothInput.value = '';
-  boothIdInput.value = '';
-  boothInput.setCustomValidity('');
-  boothSuggestions.innerHTML = '';
-  boothInput.disabled = !eventId;
-  if (!eventId) return;
-  eventBooths = await loadBooths(eventId);
-  renderBoothSuggestions(eventBooths);
+  programInput.value = '';
+  programIdInput.value = '';
+  programInput.setCustomValidity('');
+  programSuggestions.innerHTML = '';
+  programInput.disabled = true;
+  eventPrograms = [];
+  if (!eventId) {
+    return;
+  }
+  eventPrograms = await loadPrograms(eventId);
+  renderProgramOptions(eventPrograms);
 });
 
-boothInput.addEventListener('input', syncBoothSelection);
-boothInput.addEventListener('change', syncBoothSelection);
-
 // ---------- シフト提出 ----------
+function resetProgramSelection() {
+  eventPrograms = [];
+  programInput.value = '';
+  programIdInput.value = '';
+  programSuggestions.innerHTML = '';
+  programInput.setCustomValidity('');
+  programInput.disabled = true;
+}
+
+function getSelectedProgram() {
+  syncProgramSelection();
+  return eventPrograms.find((program) => program.id === programIdInput.value) ?? null;
+}
+
+programInput.addEventListener('input', syncProgramSelection);
+programInput.addEventListener('change', syncProgramSelection);
+
 function initShiftSubmit(userId) {
   shiftForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    syncBoothSelection();
-    if (boothInput.value.trim() && !boothIdInput.value) {
-      showMessage('候補からブースを選んでください', 'error');
-      return;
-    }
     if (selectedGroupIds.size === 0) {
       showMessage('提出するグループを1つ以上選択してください', 'error');
       return;
@@ -175,10 +197,17 @@ function initShiftSubmit(userId) {
       return;
     }
 
+    const selectedProgram = getSelectedProgram();
+    if (!selectedProgram) {
+      showMessage('企画を選択してください', 'error');
+      return;
+    }
+
     const commonPayload = {
       user_id: userId,
       event_id: eventSelect.value,
-      booth_id: boothIdInput.value || null,
+      program_id: selectedProgram.id,
+      booth_id: selectedProgram.booth_id || null,
       shift_date: document.getElementById('shift-date').value,
       start_time: document.getElementById('shift-start').value,
       end_time: document.getElementById('shift-end').value,
@@ -193,10 +222,7 @@ function initShiftSubmit(userId) {
     shiftForm.reset();
     selectedGroupIds = new Set();
     groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
-    boothInput.disabled = true;
-    boothSuggestions.innerHTML = '';
-    boothIdInput.value = '';
-    boothInput.setCustomValidity('');
+    resetProgramSelection();
     circleMembersEl.innerHTML = '<li class="empty">グループを選択するとメンバーが表示されます</li>';
 
     const refreshed = await loadMyShifts(userId);
@@ -208,7 +234,7 @@ function initShiftSubmit(userId) {
 async function loadMyShifts(userId) {
   const { data, error } = await supabase
     .from('shifts')
-    .select('id, group_id, booth_id, shift_date, start_time, end_time, note, groups(name), booths(name)')
+    .select('id, group_id, booth_id, program_id, shift_date, start_time, end_time, note, groups(name), programs(name, organizer), booths(name)')
     .eq('user_id', userId)
     .order('shift_date', { ascending: true })
     .order('start_time', { ascending: true });
@@ -226,12 +252,15 @@ function renderMyShifts(myShifts) {
     const li = document.createElement('li');
     li.className = 'group-item';
 
-    const locationLabel = s.booths?.name ?? '場所未設定';
+    const programLabel = s.programs?.organizer
+      ? `${s.programs.name}(${s.programs.organizer})`
+      : (s.programs?.name ?? '企画未設定');
+    const boothLabel = s.booths?.name ?? '場所未設定';
     const info = document.createElement('span');
     info.className = 'name';
     info.style.fontSize = '13.5px';
-    info.innerHTML = `${s.shift_date} ${s.start_time?.slice(0, 5)}〜${s.end_time?.slice(0, 5)}<br>
-      <span style="color:var(--color-ink-soft); font-size:12px;">${locationLabel} / ${s.groups?.name ?? ''}</span>`;
+    info.innerHTML = `${escapeHtml(s.shift_date)} ${escapeHtml(s.start_time?.slice(0, 5))}〜${escapeHtml(s.end_time?.slice(0, 5))}<br>
+      <span style="color:var(--color-ink-soft); font-size:12px;">${escapeHtml(programLabel)}（${escapeHtml(boothLabel)}） / ${escapeHtml(s.groups?.name ?? '')}</span>`;
 
     const editBtn = document.createElement('button');
     editBtn.type = 'button';
@@ -328,7 +357,7 @@ if (user) {
   groups = await loadMyGroups(user.id);
   const events = await loadMyEvents(groups);
   fillSelect(eventSelect, events, 'イベントを選択してください');
-  boothInput.disabled = true;
+  programInput.disabled = true;
   groupCheckboxesEl.innerHTML = '<p class="group-empty">イベントを選択すると表示されます</p>';
 
   initShiftSubmit(user.id);

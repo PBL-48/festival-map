@@ -139,13 +139,14 @@ function isBoothActiveNow(boothId, now = new Date()) {
   return shifts.some((s) => s.booth_id === boothId && selectedGroupIds.has(s.group_id) && isShiftActiveNow(s, now));
 }
 
-// 企画名があれば「企画名(場所)」、なければ「場所」だけ
-function shiftLocationLabel(shift) {
-  const booth = booths.find((b) => b.id === shift.booth_id);
+function shiftProgramLabel(shift) {
   const program = programs.find((p) => p.id === shift.program_id);
-  return program
-    ? `${program.name}(${booth?.name ?? '場所未設定'})`
-    : (booth?.name ?? '場所未設定');
+  return program?.name ?? '企画未設定';
+}
+
+function shiftBoothLabel(shift) {
+  const booth = booths.find((b) => b.id === shift.booth_id);
+  return booth?.name ?? '場所未設定';
 }
 
 // ---------- グループチェックボックス ----------
@@ -212,7 +213,7 @@ function renderShiftList() {
         ${hm(start)}〜${hm(end)}
       </span>
       <span class="onshift-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
-      <span class="booth">${escapeHtml(shiftLocationLabel(s))}</span>
+      <span class="booth">${escapeHtml(shiftProgramLabel(s))}（${escapeHtml(shiftBoothLabel(s))}）</span>
     `;
 
     // クリックで該当ピンを開く
