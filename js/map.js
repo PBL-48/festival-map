@@ -214,6 +214,7 @@ function renderShiftList() {
       </span>
       <span class="onshift-name">${escapeHtml(s.profiles?.display_name ?? '')}</span>
       <span class="booth">${escapeHtml(shiftProgramLabel(s))}（${escapeHtml(shiftBoothLabel(s))}）</span>
+      ${s.note ? `<span class="onshift-note">${escapeHtml(s.note)}</span>` : ''}
     `;
 
     // クリックで該当ピンを開く
@@ -233,9 +234,11 @@ function renderShiftList() {
 // ---------- ポップアップ ----------
 function shiftLineHtml(s) {
   const isActive = isShiftActiveNow(s);
-  return `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">`
+  const line = `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">`
     + `${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`
     + `</span>`;
+  const note = s.note ? `<div class="popup-shift-note">${escapeHtml(s.note)}</div>` : '';
+  return `<div class="popup-shift-line">${line}${note}</div>`;
 }
 
 function boothPopupHtml(booth) {
@@ -255,7 +258,7 @@ function boothPopupHtml(booth) {
       html += `</span>`;
 
       if (progShifts.length > 0) {
-        html += `<div class="popup-shifts">${progShifts.map(shiftLineHtml).join('<br>')}</div>`;
+        html += `<div class="popup-shifts">${progShifts.map(shiftLineHtml).join('')}</div>`;
       }
       html += `</div>`;
     }
@@ -264,7 +267,7 @@ function boothPopupHtml(booth) {
     const orphanShifts = boothShifts.filter((s) => !s.program_id);
     if (orphanShifts.length > 0) {
       html += `<div class="popup-section"><span class="label">その他のシフト</span><br>`;
-      html += orphanShifts.map(shiftLineHtml).join('<br>');
+      html += orphanShifts.map(shiftLineHtml).join('');
       html += `</div>`;
     }
   } else {
@@ -272,7 +275,7 @@ function boothPopupHtml(booth) {
     html += `<div class="popup-section"><span class="label">企画</span>未登録</div>`;
     if (boothShifts.length > 0) {
       html += `<div class="popup-section"><span class="label">シフト</span><br>`;
-      html += boothShifts.map(shiftLineHtml).join('<br>');
+      html += boothShifts.map(shiftLineHtml).join('');
       html += `</div>`;
     }
   }

@@ -783,3 +783,26 @@ margin-top: 4px;
 .popup-program-name { font-weight: 700; font-size: 13px; display: block; margin-bottom: 3px; }
 .popup-organizer { font-weight: 400; color: var(--color-ink-soft); font-size: 12px; }
 .popup-shifts { font-size: 12.5px; padding-left: 8px; }
+/* シフト一覧の note */
+.onshift-note {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.8rem;
+  color: #777;
+  white-space: pre-wrap;      /* 入力時の改行を反映 */
+  overflow-wrap: anywhere;    /* 長い URL などで横にはみ出さないように */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ポップアップの note */
+.popup-shift-line + .popup-shift-line { margin-top: 4px; }
+.popup-shift-note {
+  margin: 1px 0 0 1em;
+  font-size: 0.75rem;
+  color: #777;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
