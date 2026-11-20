@@ -234,8 +234,14 @@ function renderShiftList() {
 // ---------- ポップアップ ----------
 function shiftLineHtml(s) {
   const isActive = isShiftActiveNow(s);
+  const r = getShiftRange(s);
+  const dateLabel = r ? formatDateLabel(r.start) : (s.shift_date ?? '');
+  const timeLabel = `${formatTime(s.start_time)}〜${formatTime(s.end_time)}`;
+
   const line = `<span class="${isActive ? 'shift-active-now' : 'shift-inactive-now'}">`
-    + `${isActive ? '● ' : ''}${escapeHtml(s.profiles?.display_name ?? '')} ${formatTime(s.start_time)}〜${formatTime(s.end_time)}`
+    + `${isActive ? '● ' : ''}`
+    + `<span class="popup-shift-date">${escapeHtml(dateLabel)}</span> `
+    + `${timeLabel} ${escapeHtml(s.profiles?.display_name ?? '')}`
     + `</span>`;
   const note = s.note ? `<div class="popup-shift-note">${escapeHtml(s.note)}</div>` : '';
   return `<div class="popup-shift-line">${line}${note}</div>`;
@@ -243,7 +249,8 @@ function shiftLineHtml(s) {
 
 function boothPopupHtml(booth) {
   const boothPrograms = programs.filter((p) => p.booth_id === booth.id);
-  const boothShifts = shifts.filter((s) => s.booth_id === booth.id && selectedGroupIds.has(s.group_id));
+  const boothShifts = shifts.filter((s) => s.booth_id === booth.id && selectedGroupIds.has(s.group_id))
+  .sort((a, b) => (getShiftRange(a)?.start ?? 0) - (getShiftRange(b)?.start ?? 0));
 
   let html = `<div class="booth-popup"><h3>${escapeHtml(booth.name)}</h3>`;
 

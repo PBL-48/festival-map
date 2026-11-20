@@ -796,7 +796,10 @@ margin-top: 4px;
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-
+.popup-shift-date {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
 /* ポップアップの note */
 .popup-shift-line + .popup-shift-line { margin-top: 4px; }
 .popup-shift-note {
